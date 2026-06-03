@@ -265,15 +265,60 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 
 ---
 
-## Fields Kept as CHOICE (Hardcoded — Workflow Logic)
+## Fields Kept as CHOICE (Hardcoded — Code Change Required)
 
-| Table | Field | Values |
+These fields use hardcoded CHOICE in the model. Changing values requires code edits in `src/App.tsx`.
+
+| Table | Field | Values | Code Impact |
+|---|---|---|---|
+| pm_resource | pm_status | Active, Inactive, On Leave | Model choices list + `badgeClass()` |
+| pm_project | pm_status | Onboarding, Development Phase 1, Development Phase 2, Review, Live | Model choices + `STAGES` array + `STAGE_COLORS` map + `PipelineBoard` + `badgeClass()` + CSS `.pipeline-*` classes |
+| pm_requirement | pm_pscapprovalrequired | Yes, No | Model choices list |
+| pm_release | pm_status | Draft, Open, In Review, Released | Model choices + ReleasesView workflow buttons (conditional rendering per status) |
+| pm_config | pm_type | 11 types listed above | Model choices list + ConfigView `types` array + ConfigView stats cards |
+
+### Pipeline Stages — Code Locations
+
+If adding/changing pipeline stages, edit these 5 places:
+
+| # | Location | What |
 |---|---|---|
-| pm_resource | pm_status | Active, Inactive, On Leave |
-| pm_project | pm_status | Onboarding, Development Phase 1, Development Phase 2, Review, Live |
-| pm_requirement | pm_pscapprovalrequired | Yes, No |
-| pm_release | pm_status | Draft, Open, In Review, Released |
-| pm_config | pm_type | (all config categories) |
+| 1 | `STAGES` array (~line 228) | Stage names |
+| 2 | `STAGE_COLORS` map (~line 228) | Color mapping per stage |
+| 3 | `pm_project` model `pm_status` choices | Model validation |
+| 4 | `.pipeline-*` CSS classes | Header/card border colors |
+| 5 | `badgeClass()` function | Badge color for new status name |
+
+### Release Workflow — Code Locations
+
+If changing release workflow transitions:
+
+| # | Location | What |
+|---|---|---|
+| 1 | ReleasesView conditional buttons (~line 475) | Which buttons appear per status (`Draft→Open`, `Open→Review+Register`, `In Review→Complete`) |
+| 2 | `pm_release` model `pm_status` choices | Model validation |
+
+---
+
+## Config-Driven Fields (Edit in ⚙️ Config Tab — No Code Change)
+
+Add/remove/rename values via the Config tab. Dropdowns and badges auto-update.
+
+| Table | Field | Config Type | Seed Values |
+|---|---|---|---|
+| pm_resource | pm_department | department | IT, Business |
+| pm_resource | pm_team | team | Alpha, Beta, Gamma, Delta, Platform, Business |
+| pm_product | pm_governancestatus | governance_status | Approved, Pending, Rejected, N/A |
+| pm_project | pm_enhancementtype | enhancement_type | New Integration, BAU Enhancement |
+| pm_project | pm_priority | priority | Low, Medium, High, Critical |
+| pm_epic | pm_ragstatus | rag_status | G, A, R |
+| pm_requirement | pm_status | requirement_status | New, Prioritized, Linked |
+| pm_requirement | pm_pscapprovalstatus | psc_approval_status | Pending, Approved, Rejected, N/A |
+| pm_releaseitem | pm_signoff_status | signoff_status | Pending, Approved, Rejected |
+| pm_capability | pm_capabilitytype | capability_type | Functional, Technical, Integration, Infrastructure, Security, Data & Analytics |
+| pm_product | pm_valuestream | value_stream | Customer Experience, Operational Efficiency, Risk & Compliance |
+
+> ✅ Add/remove values via ⚙️ Config tab. `badgeClass()` colors any string automatically. No code changes.
 
 ---
 
