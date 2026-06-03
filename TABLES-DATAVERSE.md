@@ -162,8 +162,10 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 |---|---|---|---|---|
 | Config ID | pm_configid | Primary Key (GUID) | Auto | |
 | Type | pm_type | Choice | Yes | value_stream, team, department, enhancement_type, capability_type, governance_status, priority, rag_status, requirement_status, psc_approval_status, signoff_status |
+| Type | pm_type | Choice | Yes | 11 types listed above |
 | Name | pm_name | Single Line of Text (200) | Yes | |
 | Description | pm_description | Single Line of Text (500) | No | |
+| Code Change? | pm_hardcoded | Choice (No/Yes) | No | No = configurable in UI; Yes = requires code edit |
 
 > **Purpose:** Central lookup table for all configurable dropdown values across the app. Each type stores its valid values as rows.
 
@@ -269,13 +271,13 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 
 These fields use hardcoded CHOICE in the model. Changing values requires code edits in `src/App.tsx`.
 
-| Table | Field | Values | Code Impact |
+| Table | Field | Values | Code Change? |
 |---|---|---|---|
-| pm_resource | pm_status | Active, Inactive, On Leave | Model choices list + `badgeClass()` |
-| pm_project | pm_status | Onboarding, Development Phase 1, Development Phase 2, Review, Live | Model choices + `STAGES` array + `STAGE_COLORS` map + `PipelineBoard` + `badgeClass()` + CSS `.pipeline-*` classes |
-| pm_requirement | pm_pscapprovalrequired | Yes, No | Model choices list |
-| pm_release | pm_status | Draft, Open, In Review, Released | Model choices + ReleasesView workflow buttons (conditional rendering per status) |
-| pm_config | pm_type | 11 types listed above | Model choices list + ConfigView `types` array + ConfigView stats cards |
+| pm_resource | pm_status | Active, Inactive, On Leave | **Yes** — Model + `badgeClass()` |
+| pm_project | pm_status | Onboarding, Development Phase 1, Development Phase 2, Review, Live | **Yes** — Model + `STAGES` + `STAGE_COLORS` + `PipelineBoard` + `badgeClass()` + CSS |
+| pm_requirement | pm_pscapprovalrequired | Yes, No | **Yes** — Model choices list |
+| pm_release | pm_status | Draft, Open, In Review, Released | **Yes** — Model + ReleasesView workflow buttons |
+| pm_config | pm_type | 11 types listed above | **Yes** — Model + ConfigView `types` array + stats |
 
 ### Pipeline Stages — Code Locations
 
@@ -304,19 +306,19 @@ If changing release workflow transitions:
 
 Add/remove/rename values via the Config tab. Dropdowns and badges auto-update.
 
-| Table | Field | Config Type | Seed Values |
-|---|---|---|---|
-| pm_resource | pm_department | department | IT, Business |
-| pm_resource | pm_team | team | Alpha, Beta, Gamma, Delta, Platform, Business |
-| pm_product | pm_governancestatus | governance_status | Approved, Pending, Rejected, N/A |
-| pm_project | pm_enhancementtype | enhancement_type | New Integration, BAU Enhancement |
-| pm_project | pm_priority | priority | Low, Medium, High, Critical |
-| pm_epic | pm_ragstatus | rag_status | G, A, R |
-| pm_requirement | pm_status | requirement_status | New, Prioritized, Linked |
-| pm_requirement | pm_pscapprovalstatus | psc_approval_status | Pending, Approved, Rejected, N/A |
-| pm_releaseitem | pm_signoff_status | signoff_status | Pending, Approved, Rejected |
-| pm_capability | pm_capabilitytype | capability_type | Functional, Technical, Integration, Infrastructure, Security, Data & Analytics |
-| pm_product | pm_valuestream | value_stream | Customer Experience, Operational Efficiency, Risk & Compliance |
+| Table | Field | Config Type | Seed Values | Code Change? |
+|---|---|---|---|---|
+| pm_resource | pm_department | department | IT, Business | No |
+| pm_resource | pm_team | team | Alpha, Beta, Gamma, Delta, Platform, Business | No |
+| pm_product | pm_governancestatus | governance_status | Approved, Pending, Rejected, N/A | No |
+| pm_project | pm_enhancementtype | enhancement_type | New Integration, BAU Enhancement | No |
+| pm_project | pm_priority | priority | Low, Medium, High, Critical | No |
+| pm_epic | pm_ragstatus | rag_status | G, A, R | No |
+| pm_requirement | pm_status | requirement_status | New, Prioritized, Linked | No |
+| pm_requirement | pm_pscapprovalstatus | psc_approval_status | Pending, Approved, Rejected, N/A | No |
+| pm_releaseitem | pm_signoff_status | signoff_status | Pending, Approved, Rejected | No |
+| pm_capability | pm_capabilitytype | capability_type | Functional, Technical, Integration, Infrastructure, Security, Data & Analytics | No |
+| pm_product | pm_valuestream | value_stream | Customer Experience, Operational Efficiency, Risk & Compliance | No |
 
 > ✅ Add/remove values via ⚙️ Config tab. `badgeClass()` colors any string automatically. No code changes.
 
@@ -342,3 +344,26 @@ Add/remove/rename values via the Config tab. Dropdowns and badges auto-update.
 | pm_releaseitem | 6 items |
 | pm_assignment | 11 assignments |
 | **Total** | **~215 records** |
+
+---
+
+## Master Summary: Hardcoded vs Config-Driven
+
+| Table | Field | Type | Code Change? |
+|---|---|---|---|
+| pm_resource | pm_department | Config | No |
+| pm_resource | pm_team | Config | No |
+| pm_resource | pm_status | Hardcoded CHOICE | **Yes** |
+| pm_product | pm_valuestream | Config (lookup) | No |
+| pm_product | pm_governancestatus | Config | No |
+| pm_capability | pm_capabilitytype | Config (lookup) | No |
+| pm_requirement | pm_status | Config | No |
+| pm_requirement | pm_pscapprovalstatus | Config | No |
+| pm_requirement | pm_pscapprovalrequired | Hardcoded CHOICE | **Yes** |
+| pm_project | pm_enhancementtype | Config | No |
+| pm_project | pm_priority | Config | No |
+| pm_project | pm_status | Hardcoded CHOICE | **Yes** — 5 code locations |
+| pm_epic | pm_ragstatus | Config | No |
+| pm_release | pm_status | Hardcoded CHOICE | **Yes** — 2 code locations |
+| pm_releaseitem | pm_signoff_status | Config | No |
+| pm_config | pm_type | Hardcoded CHOICE | **Yes** — 3 code locations |
