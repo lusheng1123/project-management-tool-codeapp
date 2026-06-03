@@ -164,7 +164,43 @@ Submitted → Triaging → Assessed → Approved → Converted
 | `views.tsx` | Add DemandView export |
 | `App.tsx` | Add Demand tab |
 
-### Effort: ~5 files | Priority: High
+### Effort: ~5 files | Priority: High | Status: ✅ Done
+
+---
+
+## 🚀 Feature: Dashboard
+
+Single-screen overview of everything happening in the system. Role-aware (will integrate with UAC).
+
+### Sections
+
+| Section | Content |
+|---|---|
+| **Stats Cards** | Total Demands, Active Demands, Open Risks, Pending Signoffs, Active Releases |
+| **Action Items** | Demands in non-terminal states with next action needed + pending release signoffs |
+| **Product Overview** | Per-product table: demand count, risk count, dependency count |
+| **Releases Snapshot** | All releases with status, item count, signoff progress |
+
+### Role Awareness (when UAC is done)
+
+| Role | Action Items shown |
+|---|---|
+| Admin | All — demands to Triage/Assess/Approve/Convert, all pending signoffs |
+| PM | Demands to Triage/Assess/Convert |
+| PO | Demands to Approve, pending signoffs |
+| Developer | Assigned epics (placeholder) |
+| Release Mgr | Releases to Open/Review/Complete, pending signoffs |
+| Viewer | Empty (stats-only) |
+
+### Files Effected
+
+| File | Change |
+|---|---|
+| `src/views/DashboardView.tsx` | New — dashboard with 4 sections |
+| `src/views.tsx` | Add export |
+| `src/App.tsx` | Add Dashboard tab (first tab, default) |
+
+### Effort: ~3 files | Priority: High | Status: ✅ Done
 
 ---
 
