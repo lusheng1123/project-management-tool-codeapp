@@ -310,15 +310,18 @@ Add/remove/rename values via the Config tab. Dropdowns and badges auto-update.
 |---|---|---|---|---|
 | pm_resource | pm_department | department | IT, Business | No |
 | pm_resource | pm_team | team | Alpha, Beta, Gamma, Delta, Platform, Business | No |
-| pm_product | pm_governancestatus | governance_status | Approved, Pending, Rejected, N/A | No |
-| pm_project | pm_enhancementtype | enhancement_type | New Integration, BAU Enhancement | No |
-| pm_project | pm_priority | priority | Low, Medium, High, Critical | No |
-| pm_epic | pm_ragstatus | rag_status | G, A, R | No |
-| pm_requirement | pm_status | requirement_status | New, Prioritized, Linked | No |
-| pm_requirement | pm_pscapprovalstatus | psc_approval_status | Pending, Approved, Rejected, N/A | No |
-| pm_releaseitem | pm_signoff_status | signoff_status | Pending, Approved, Rejected | No |
-| pm_capability | pm_capabilitytype | capability_type | Functional, Technical, Integration, Infrastructure, Security, Data & Analytics | No |
 | pm_product | pm_valuestream | value_stream | Customer Experience, Operational Efficiency, Risk & Compliance | No |
+| pm_capability | pm_capabilitytype | capability_type | Functional, Technical, Integration, Infrastructure, Security, Data & Analytics | No |
+| pm_project | pm_enhancementtype | enhancement_type | New Integration, BAU Enhancement | No |
+| pm_product | pm_governancestatus | governance_status | Approved, Pending, Rejected, N/A | **Yes** — `badgeClass()` |
+| pm_project | pm_priority | priority | Low, Medium, High, Critical | **Yes** — `badgeClass('critical')` |
+| pm_epic | pm_ragstatus | rag_status | G, A, R | **Yes** — `badgeClass()` + view rendering |
+| pm_requirement | pm_status | requirement_status | New, Prioritized, Linked | **Yes** — `badgeClass()` |
+| pm_requirement | pm_pscapprovalstatus | psc_approval_status | Pending, Approved, Rejected, N/A | **Yes** — `badgeClass()` |
+| pm_releaseitem | pm_signoff_status | signoff_status | Pending, Approved, Rejected | **Yes** — `badgeClass()` |
+
+> **Yes** = values are matched in `badgeClass()` or view logic (e.g., `pm_ragstatus === 'G'`). Changing/renaming them affects badge colors or conditional rendering. Adding new values gets `badge-gray` (safe default).
+> **No** = pure labels, no code dependency. Add/remove/rename freely.
 
 > ✅ Add/remove values via ⚙️ Config tab. `badgeClass()` colors any string automatically. No code changes.
 
@@ -339,7 +342,7 @@ Add/remove/rename values via the Config tab. Dropdowns and badges auto-update.
 | pm_userstory | 8 stories |
 | pm_risk | 6 risks |
 | pm_dependency | 6 dependencies |
-| pm_config | 41 entries (11 types) |
+| pm_config | 40 entries (11 types: 19 No + 21 Yes) |
 | pm_release | 3 releases |
 | pm_releaseitem | 6 items |
 | pm_assignment | 11 assignments |
