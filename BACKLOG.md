@@ -122,10 +122,9 @@ const { canDo } = useRole()
 | Priority | pm_priority | Single Line of Text (50) | `pm_config` type=`priority` |
 | Status | pm_status | Single Line of Text (50) | `pm_config` type=`demand_status` |
 | Capability | pm_capability | Lookup → pm_capability | Target capability |
-| Product | pm_product | Lookup → pm_product | Target product |
+| Product | pm_product | Lookup → pm_product (Required) | Target application |
 | Submitted By | pm_submitted_by | Single Line of Text (100) | |
 | Submitted Date | pm_submitted_date | Date Only | |
-| Effort Estimate | pm_effort_estimate | Whole Number | Assessed (days) |
 | Assessment Notes | pm_assessment_notes | Single Line of Text (500) | |
 | Converted To | pm_converted_to | Lookup → pm_requirement | Once approved |
 | Converted Date | pm_converted_date | Date Only | |

@@ -168,10 +168,9 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 | Priority | pm_priority | Single Line of Text (50) | No | `pm_config` type=`priority` |
 | Status | pm_status | Single Line of Text (50) | No | `pm_config` type=`demand_status` |
 | Capability | pm_capability | Lookup → pm_capability | No | |
-| Product | pm_product | Lookup → pm_product | No | |
+| Product | pm_product | Lookup → pm_product | **Yes** | |
 | Submitted By | pm_submitted_by | Single Line of Text (100) | No | |
 | Submitted Date | pm_submitted_date | Date Only | No | |
-| Effort Estimate | pm_effort_estimate | Whole Number | No | Assessed effort (days) |
 | Assessment Notes | pm_assessment_notes | Multiple Lines of Text (2000) | No | |
 | Converted To | pm_converted_to | Lookup → pm_requirement | No | |
 | Converted Date | pm_converted_date | Date Only | No | |

@@ -97,10 +97,9 @@ export const MODELS: Record<string, Model> = {
     { name: 'pm_priority', label: 'Priority', type: 'text' },
     { name: 'pm_status', label: 'Status', type: 'text' },
     { name: 'pm_capability', label: 'Capability', type: 'lookup', target: 'pm_capability' },
-    { name: 'pm_product', label: 'Product', type: 'lookup', target: 'pm_product' },
+    { name: 'pm_product', label: 'Product', type: 'lookup', target: 'pm_product', required: true },
     { name: 'pm_submitted_by', label: 'Submitted By', type: 'text' },
     { name: 'pm_submitted_date', label: 'Submitted Date', type: 'date' },
-    { name: 'pm_effort_estimate', label: 'Effort Estimate (days)', type: 'number' },
     { name: 'pm_assessment_notes', label: 'Assessment Notes', type: 'multiline' },
     { name: 'pm_converted_to', label: 'Converted To', type: 'lookup', target: 'pm_requirement' },
     { name: 'pm_converted_date', label: 'Converted Date', type: 'date' }
