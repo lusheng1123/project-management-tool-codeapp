@@ -70,6 +70,7 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 | Status | pm_status | Single Line of Text (50) | No | `pm_config` type=`requirement_status` |
 | PSC Approval Required | pm_pscapprovalrequired | Single Line of Text (10) | No | `pm_config` type=`yes_no` |
 | PSC Approval Status | pm_pscapprovalstatus | Single Line of Text (50) | No | `pm_config` type=`psc_approval_status` |
+| Effort | pm_effort | Whole Number | No | Build effort in days |
 
 ---
 
@@ -111,7 +112,8 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 | Detail | pm_detail | Multiple Lines of Text (4000) | No | |
 | Project | pm_projectname | Lookup → pm_project | No | |
 | Jira Link | pm_jiralink | Single Line of Text (500) | No | |
-| Effort (days) | pm_effort | Whole Number | No | |
+| Effort (days) | pm_estimatedeffort | Whole Number | No | PM's estimate |
+| Release Date | pm_releasedate | Date Only | No | |
 | Release Date | pm_releasedate | Date Only | No | |
 | Start Date | pm_startdate | Date Only | No | |
 | Completed Date | pm_completeddate | Date Only | No | |
@@ -129,6 +131,7 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 | Detail | pm_detail | Multiple Lines of Text (4000) | Yes | |
 | Epic | pm_epicid | Lookup → pm_epic | No | |
 | Acceptance Criteria | pm_acceptancecriteria | Multiple Lines of Text (4000) | No | |
+| Story Points | pm_storypoint | Whole Number | No | 1pt = 1 manday |
 
 ---
 
@@ -192,6 +195,7 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 | Signoff Date | pm_signoff_date | Date Only | No | |
 | Registered By | pm_registered_by | Single Line of Text (100) | No | |
 | Registered Date | pm_registered_date | Date Only | No | |
+| Tool | pm_tool | Single Line of Text (100) | No | `pm_config` type=`tool` |
 
 ---
 
@@ -229,6 +233,7 @@ All configurable values live in `pm_config`. Add/edit/remove values in the ⚙�
 | `project_status` | pm_project.pm_status | Onboarding, Development Phase 1, Development Phase 2, Review, Live | **Yes** |
 | `release_status` | pm_release.pm_status | Draft, Open, In Review, Released | **Yes** |
 | `yes_no` | pm_requirement.pm_pscapprovalrequired | Yes, No | **Yes** |
+| `tool` | pm_releaseitem.pm_tool | Jira, Azure DevOps, GitHub, ServiceNow, Jenkins | No |
 
 > **Yes** = values matched in `badgeClass()` or view logic. Renaming breaks colors/behavior. Adding new values gets `badge-gray` (safe default). **No** = pure labels, freely editable.
 
@@ -309,7 +314,7 @@ Values: `G`, `A`, `R`
 | pm_userstory | 8 |
 | pm_risk | 6 |
 | pm_dependency | 6 |
-| pm_config | 56 entries (15 types) |
+| pm_config | 61 entries (16 types) |
 | pm_release | 3 |
 | pm_releaseitem | 6 |
 | pm_assignment | 11 |
