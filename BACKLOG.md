@@ -4,6 +4,13 @@
 
 ## 🚀 Feature: UAC (User Access Control)
 
+### Design Principles
+- **Tab-level** filtering — roles see only their assigned tabs
+- **Button-level** gating — workflow buttons (Approve, Triage, Signoff etc.) restricted by role
+- **Centralized** permission matrix in `src/permissions.ts` (single source of truth)
+- **`useRole()` hook** — `canViewTab(tabId)` + `canDo(action, tab?)` consumed by all views
+- DEV mode: role selector dropdown in header, persisted as `pm_current_role` in localStorage
+
 ### Tables
 
 **pm_user** — Users with roles
@@ -17,49 +24,88 @@
 | Status | pm_status | Single Line of Text (50) | Active / Inactive |
 | Email | pm_email | Email (100) | |
 
-### Config: `pm_config` type=`user_role`
-
-Roles stored in config table. Seed values:
+### Roles (pm_config type=`user_role`)
 
 | Role | Description |
 |---|---|
-| Admin | Full access — all tabs + CRUD |
-| PM | Project Manager — manage projects, resources, assignments |
-| PO | Product Owner — signoff, approve demands |
-| Developer | View + work on epics, stories, assignments |
+| Admin | Full access — all tabs, all actions |
+| PM | Project Manager — manage projects, resources, assignments, demand workflow |
+| PO | Product Owner — approve/reject demands, signoff releases |
+| Developer | View + work on epics, stories, register to releases |
 | Release Manager | Manage releases, signoff |
 | Viewer | Read-only across all tabs |
 
-### Role → Tab Mapping
+### Permission Matrix
 
-| Role | Visible Tabs |
+#### Tab Visibility
+
+| Role | Visible Tabs (12 total) |
 |---|---|
-| Admin | All (12 tabs) |
-| PM | Resources, Products, Projects, Capabilities, Requirements, Epics, Stories, Risks, Deps, Demand |
-| PO | Products, Requirements, Epics, Stories, Demand |
+| Admin | All 12 |
+| PM | Demand, Capabilities, Products, Projects, Requirements, Epics, Stories, Risks, Deps, Releases, Resources |
+| PO | Demand, Products, Requirements, Epics, Stories |
 | Developer | Epics, Stories, Requirements, Projects, Releases |
 | Release Manager | Releases, Epics, Stories, Requirements |
-| Viewer | All (read-only — no Edit/Delete/Create buttons) |
+| Viewer | All 12 (read-only — no action buttons) |
 
-### UI Changes
+#### Action Permissions (per tab)
 
-| Layer | What |
-|---|---|
-| `App.tsx` header | Role selector dropdown (DEV mode). Persisted in localStorage as `pm_current_role` |
-| `App.tsx` nav | `TABS` array filtered by current role before rendering tab buttons |
-| All `views/*.tsx` | Conditional action buttons — Edit/Delete/Create hidden for Viewer; Create hidden for Developer on some tabs |
+| Tab → | Demand | Release | General (all other tabs) |
+|---|---|---|---|
+| **Admin** | All (Create, Edit, Delete, Triage, Assess, Approve, Reject, Convert) | All (Create, Edit, Delete, Open, Review, Complete, Register, Signoff) | Full CRUD |
+| **PM** | Create, Edit, Delete, Triage, Assess, Convert, Reject | Create, Edit, Delete, Register | Full CRUD on managed tabs |
+| **PO** | Approve, Reject | Signoff | View-only on others |
+| **Developer** | View-only | Register stories | Create/Edit Story, view rest |
+| **Release Mgr** | View-only | All (Create, Edit, Delete, Open, Review, Complete, Register, Signoff) | Edit Release, view rest |
+| **Viewer** | None | None | None (view-only) |
 
-### Files Affected
+#### Demand Workflow Buttons — Who Sees What
+
+| Button | Admin | PM | PO | Developer | Release Mgr | Viewer |
+|---|---|---|---|---|---|---|
+| `+ Raise Demand` | ✅ | ✅ | — | — | — | — |
+| `✏️ Edit` | ✅ | ✅ | — | — | — | — |
+| `🗑️ Delete` | ✅ | ✅ | — | — | — | — |
+| `🔍 Start Triage` | ✅ | ✅ | — | — | — | — |
+| `📋 Assess` | ✅ | ✅ | — | — | — | — |
+| `❌ Reject` | ✅ | ✅ | ✅ | — | — | — |
+| `✅ Approve` | ✅ | — | ✅ | — | — | — |
+| `🔄 Convert` | ✅ | ✅ | — | — | — | — |
+
+### Implementation
 
 | File | Change |
 |---|---|
-| `models.ts` | Add `pm_user` table |
-| `seed.ts` | Add 6 user_role config entries + seed 6 users |
-| `App.tsx` | Role selector + tab filtering logic |
-| All 11 view files | Conditional action visibility based on role |
-| `TABLES-DATAVERSE.md` | Update table specs |
+| `src/permissions.ts` | **New** — centralized permission matrix: `{ role → { tabs: string[], actions: { [tab]: string[] } } }` |
+| `src/context/RoleContext.tsx` | **New** — `RoleProvider` + `useRole()` hook exposing `role`, `canViewTab()`, `canDo()` |
+| `src/models.ts` | Add `pm_user` table |
+| `src/seed.ts` | 6 user_role config + 6 seed users (one per role) |
+| `src/App.tsx` | Wrap in `<RoleProvider>`, role selector dropdown in header, filter `TABS` by `canViewTab()` |
+| `src/views/*.tsx` (12 views) | Each view calls `const { canDo } = useRole()` and wraps action buttons: `{canDo('approve') && <button>✅ Approve</button>}` |
+| `TABLES-DATAVERSE.md` | Add pm_user spec + user_role config type |
+| `BACKLOG.md` | Mark E1 done |
 
-### Effort: ~10 files | Priority: High
+### Example Usage in Views
+
+```tsx
+// In DemandView.tsx
+const { canDo } = useRole()
+...
+{dem.pm_status === 'Approved' && canDo('convert') && (
+  <button onClick={() => openConvert(dem.id)}>🔄 Convert</button>
+)}
+{dem.pm_status === 'Assessed' && canDo('approve') && (
+  <button onClick={() => approve(dem.id)}>✅ Approve</button>
+)}
+{dem.pm_status === 'Submitted' && canDo('triage') && (
+  <button onClick={() => startTriage(dem.id)}>🔍 Start Triage</button>
+)}
+{canDo('create') && (
+  <button onClick={openCreate}>+ Raise Demand</button>
+)}
+```
+
+### Effort: ~16 files | Priority: High
 
 ---
 
@@ -127,7 +173,7 @@ Submitted → Triaging → Assessed → Approved → Converted
 | # | Feature | Priority | Files | Notes |
 |---|---|---|---|---|
 | E1 | UAC — User roles + tab filtering + permissions | **High** | ~10 | Roles, tab visibility, action buttons |
-| E2 | Demand Intake — New tab + workflow + convert | **High** | ~5 | New table, workflow, convert action |
+| E2 | Demand Intake — New tab + workflow + convert | **High** | ~5 | ✅ **Done** — `views/DemandView.tsx`, 5-stage workflow, config-driven, convert to requirement |
 | E3 | `pm_pscapprovalrequired` dropdown from `yes_no` config | Low | 1 | Replace text input with Yes/No select |
 | E4 | Effort Summary tab — Product/Project/Epic/Story rollup | Medium | ~3 | Calculated totals across hierarchy |
 | E5 | Resource capacity warnings — Allocation % > 100% | Low | 1 | Red highlight in Resources tab |
@@ -153,7 +199,7 @@ Submitted → Triaging → Assessed → Approved → Converted
 
 | Category | Count |
 |---|---|
-| Features (major) | 2 |
+| Features (major) | 1 |
 | Enhancements | 10 |
 | Bugs / Cleanup | 3 |
-| **Total Backlog Items** | **15** |
+| **Total Backlog Items** | **14** |

@@ -157,7 +157,30 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 
 ---
 
-## 12. pm_config (Configuration)
+## 12. pm_demand (Demand)
+
+| Display Name | Schema Name | Type | Required | Config Source |
+|---|---|---|---|---|
+| Demand ID | pm_demandid | Primary Key (GUID) | Auto | |
+| Title | pm_title | Single Line of Text (200) | Yes | |
+| Detail | pm_detail | Multiple Lines of Text (4000) | No | |
+| Type | pm_type | Single Line of Text (50) | No | `pm_config` type=`demand_type` |
+| Priority | pm_priority | Single Line of Text (50) | No | `pm_config` type=`priority` |
+| Status | pm_status | Single Line of Text (50) | No | `pm_config` type=`demand_status` |
+| Capability | pm_capability | Lookup → pm_capability | No | |
+| Product | pm_product | Lookup → pm_product | No | |
+| Submitted By | pm_submitted_by | Single Line of Text (100) | No | |
+| Submitted Date | pm_submitted_date | Date Only | No | |
+| Effort Estimate | pm_effort_estimate | Whole Number | No | Assessed effort (days) |
+| Assessment Notes | pm_assessment_notes | Multiple Lines of Text (2000) | No | |
+| Converted To | pm_converted_to | Lookup → pm_requirement | No | |
+| Converted Date | pm_converted_date | Date Only | No | |
+
+> **Workflow:** Submitted → Triaging → Assessed → Approved → Converted. Rejection available from Triaging and Assessed. Workflow buttons in `DemandView.tsx`. Convert action creates `pm_requirement`.
+
+---
+
+## 13. pm_config (Configuration)
 
 | Display Name | Schema Name | Type | Required | Config Source |
 |---|---|---|---|---|
@@ -169,7 +192,7 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 
 ---
 
-## 13. pm_release (Release)
+## 14. pm_release (Release)
 
 | Display Name | Schema Name | Type | Required | Config Source |
 |---|---|---|---|---|
@@ -182,7 +205,7 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 
 ---
 
-## 14. pm_releaseitem (Release Item)
+## 15. pm_releaseitem (Release Item)
 
 | Display Name | Schema Name | Type | Required | Config Source |
 |---|---|---|---|---|
@@ -199,7 +222,7 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 
 ---
 
-## 15. pm_assignment (Assignment)
+## 16. pm_assignment (Assignment)
 
 | Display Name | Schema Name | Type | Required | Config Source |
 |---|---|---|---|---|
@@ -234,6 +257,8 @@ All configurable values live in `pm_config`. Add/edit/remove values in the ⚙�
 | `release_status` | pm_release.pm_status | Draft, Open, In Review, Released | **Yes** |
 | `yes_no` | pm_requirement.pm_pscapprovalrequired | Yes, No | **Yes** |
 | `tool` | pm_releaseitem.pm_tool | Jira, Azure DevOps, GitHub, ServiceNow, Jenkins | No |
+| `demand_type` | pm_demand.pm_type | Feature, Bug, Enhancement, Tech Debt | No |
+| `demand_status` | pm_demand.pm_status | Submitted, Triaging, Assessed, Approved, Rejected, Converted | **Yes** |
 
 > **Yes** = values matched in `badgeClass()` or view logic. Renaming breaks colors/behavior. Adding new values gets `badge-gray` (safe default). **No** = pure labels, freely editable.
 
@@ -263,6 +288,16 @@ Values: `Draft`, `Open`, `In Review`, `Released`
 |---|---|---|
 | 1 | ReleasesView buttons | Conditional rendering per status |
 | 2 | `badgeClass()` | Badge colors |
+
+### Demand Workflow (demand_status)
+
+Values: `Submitted`, `Triaging`, `Assessed`, `Approved`, `Rejected`, `Converted`
+
+| # | Location | What |
+|---|---|---|
+| 1 | DemandView workflow buttons | Conditional rendering per status (Start Triage, Assess, Approve, Convert, Reject) |
+| 2 | `badgeClass()` | Badge colors (Submitted=green, Triaging=amber, Assessed=blue, Approved=green, Rejected=blue, Converted=green) |
+| 3 | `openConvert()` in DemandView | Creates `pm_requirement` with populated fields, sets `pm_converted_to` + `pm_converted_date` |
 
 ### RAG Status (rag_status)
 
@@ -294,6 +329,10 @@ Values: `G`, `A`, `R`
 | pm_project | pm_risk | pm_projectname |
 | pm_epic | pm_userstory | pm_epicid |
 | pm_risk | pm_dependency | pm_riskid |
+| pm_dependency | pm_demand | pm_riskid |
+| pm_capability | pm_demand | pm_capability |
+| pm_product | pm_demand | pm_product |
+| pm_demand | pm_requirement | pm_converted_to |
 | pm_release | pm_releaseitem | pm_release |
 | pm_userstory | pm_releaseitem | pm_userstory |
 
@@ -314,7 +353,8 @@ Values: `G`, `A`, `R`
 | pm_userstory | 8 |
 | pm_risk | 6 |
 | pm_dependency | 6 |
-| pm_config | 61 entries (16 types) |
+| pm_config | 71 entries (18 types) |
+| pm_demand | 5 |
 | pm_release | 3 |
 | pm_releaseitem | 6 |
 | pm_assignment | 11 |

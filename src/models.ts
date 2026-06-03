@@ -90,6 +90,21 @@ export const MODELS: Record<string, Model> = {
     { name: 'pm_detail', label: 'Dependency Detail', type: 'multiline' },
     { name: 'pm_riskid', label: 'Risk', type: 'lookup', target: 'pm_risk' }
   ]},
+  pm_demand: { name: 'Demand', fields: [
+    { name: 'pm_title', label: 'Title', type: 'text', required: true },
+    { name: 'pm_detail', label: 'Detail', type: 'multiline' },
+    { name: 'pm_type', label: 'Type', type: 'text' },
+    { name: 'pm_priority', label: 'Priority', type: 'text' },
+    { name: 'pm_status', label: 'Status', type: 'text' },
+    { name: 'pm_capability', label: 'Capability', type: 'lookup', target: 'pm_capability' },
+    { name: 'pm_product', label: 'Product', type: 'lookup', target: 'pm_product' },
+    { name: 'pm_submitted_by', label: 'Submitted By', type: 'text' },
+    { name: 'pm_submitted_date', label: 'Submitted Date', type: 'date' },
+    { name: 'pm_effort_estimate', label: 'Effort Estimate (days)', type: 'number' },
+    { name: 'pm_assessment_notes', label: 'Assessment Notes', type: 'multiline' },
+    { name: 'pm_converted_to', label: 'Converted To', type: 'lookup', target: 'pm_requirement' },
+    { name: 'pm_converted_date', label: 'Converted Date', type: 'date' }
+  ]},
   pm_release: { name: 'Release', fields: [
     { name: 'pm_releasename', label: 'Release Name', type: 'text', required: true },
     { name: 'pm_status', label: 'Status', type: 'text' },
