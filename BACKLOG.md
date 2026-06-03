@@ -204,6 +204,47 @@ Single-screen overview of everything happening in the system. Role-aware (will i
 
 ---
 
+## 🔗 Feature: Jira Integration
+
+### Current State
+- `pm_epic` already has `pm_jiralink` (text field, single URL per epic)
+- No sync, no automation — manual paste only
+
+### Scope
+
+| # | Feature | Description |
+|---|---|---|
+| 1 | **Extend Jira links** | Add `pm_jiralink` field to `pm_requirement` and `pm_userstory` (not just epics) |
+| 2 | **Jira Link column** | Show clickable Jira link icon (🔗) in Epics, Stories, Requirements tables — opens Jira issue in new tab |
+| 3 | **Jira status sync** | On dashboard/epic view, show Jira issue status alongside local RAG status (pull via Jira API in PROD, mock in DEV) |
+| 4 | **Create Jira issue** | "📤 Push to Jira" button on Approved demands — creates Jira issue via API, stores link back |
+
+### Phases
+
+| Phase | Label | What | Effort |
+|---|---|---|---|
+| P1 | **Link & Display** | `pm_jiralink` on requirements + stories, clickable link column | ~4 files |
+| P2 | **Push to Jira** | "Create Jira issue" from demand/requirement → stores link | ~5 files (needs API) |
+| P3 | **Status Sync** | Pull Jira status, show alongside local data | ~4 files (needs API/webhook) |
+
+### DEV Mode (localStorage)
+- Mock Jira API — just stores a `pm_jiralink` field, no real API call
+- In PROD Power Apps: use Jira REST API connector
+
+### Files Affected (P1 only)
+
+| File | Change |
+|---|---|
+| `src/models.ts` | Add `pm_jiralink` to pm_requirement + pm_userstory |
+| `src/views/RequirementsView.tsx` | Jira link column + clickable icon |
+| `src/views/UserStoriesView.tsx` | Jira link column + clickable icon |
+| `src/views/EpicsView.tsx` | Make existing jiralink clickable (currently text-only) |
+| `TABLES-DATAVERSE.md` | Update specs |
+
+### Priority: Medium | Effort: ~5-13 files (phased)
+
+---
+
 ## 🔧 Enhancement Backlog
 
 | # | Feature | Priority | Files | Notes |
