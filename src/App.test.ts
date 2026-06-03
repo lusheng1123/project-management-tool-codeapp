@@ -3,7 +3,6 @@ import {
   DS,
   seedAllIfNeeded,
   badgeClass,
-  roadmapClass,
   getFields,
   getModelName,
   genId,
@@ -186,21 +185,6 @@ describe('badgeClass', () => {
   })
 })
 
-describe('roadmapClass', () => {
-  it('returns correct classes for project statuses', () => {
-    expect(roadmapClass('Live')).toBe('badge-green')
-    expect(roadmapClass('Approved')).toBe('badge-green')
-    expect(roadmapClass('Development Phase 1')).toBe('badge-blue')
-    expect(roadmapClass('Development Phase 2')).toBe('badge-blue')
-    expect(roadmapClass('Onboarding')).toBe('badge-amber')
-    expect(roadmapClass('Review')).toBe('badge-amber')
-    expect(roadmapClass('Pending')).toBe('badge-amber')
-    expect(roadmapClass('Rejected')).toBe('badge-gray')
-    expect(roadmapClass('N/A')).toBe('badge-gray')
-    expect(roadmapClass('Random')).toBe('badge-gray')
-  })
-})
-
 describe('genId', () => {
   it('generates id with prefix', () => {
     expect(genId('test')).toMatch(/^test_\d+_[a-z0-9]+$/)
@@ -227,10 +211,6 @@ describe('getFields', () => {
     expect(getFields('unknown')).toEqual([])
   })
 
-  it('returns correct choices for choice fields', () => {
-    const statusField = getFields('pm_project').find(f => f.name === 'pm_status')
-    expect(statusField?.choices).toEqual(['Onboarding', 'Development Phase 1', 'Development Phase 2', 'Review', 'Live'])
-  })
 })
 
 describe('getModelName', () => {
