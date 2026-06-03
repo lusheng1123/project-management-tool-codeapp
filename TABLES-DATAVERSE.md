@@ -142,7 +142,8 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 | Risk ID | pm_riskid | Primary Key (GUID) | Auto | |
 | Summary | pm_summary | Single Line of Text (300) | Yes | |
 | Detail | pm_detail | Multiple Lines of Text (4000) | No | |
-| Project | pm_projectname | Lookup → pm_project | No | |
+| Product | pm_productname | Lookup → pm_product | No | |
+| Requirement | pm_requirementid | Lookup → pm_requirement | No | Filtered by selected product |
 
 ---
 
@@ -153,7 +154,8 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 | Dependency ID | pm_dependencyid | Primary Key (GUID) | Auto | |
 | Summary | pm_summary | Single Line of Text (300) | Yes | |
 | Detail | pm_detail | Multiple Lines of Text (4000) | No | |
-| Risk | pm_riskid | Lookup → pm_risk | No | |
+| Product | pm_productname | Lookup → pm_product | No | |
+| Requirement | pm_requirementid | Lookup → pm_requirement | No | Filtered by selected product |
 
 ---
 
@@ -167,6 +169,7 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 | Type | pm_type | Single Line of Text (50) | No | `pm_config` type=`demand_type` |
 | Priority | pm_priority | Single Line of Text (50) | No | `pm_config` type=`priority` |
 | Status | pm_status | Single Line of Text (50) | No | `pm_config` type=`demand_status` |
+| Value Stream | pm_valuestream | Single Line of Text (100) | No | `pm_config` type=`value_stream` |
 | Capability | pm_capability | Lookup → pm_capability | No | |
 | Product | pm_product | Lookup → pm_product | **Yes** | |
 | Submitted By | pm_submitted_by | Single Line of Text (100) | No | |
@@ -240,7 +243,7 @@ All configurable values live in `pm_config`. Add/edit/remove values in the ⚙�
 
 | Config Type | Used By (Table.Field) | Seed Values | Code Change? |
 |---|---|---|---|
-| `value_stream` | pm_product.pm_valuestream | Customer Experience, Operational Efficiency, Risk & Compliance | No |
+| `value_stream` | pm_product.pm_valuestream, pm_demand.pm_valuestream | Customer Experience, Operational Efficiency, Risk & Compliance | No |
 | `team` | pm_resource.pm_team | Alpha, Beta, Gamma, Delta, Platform, Business | No |
 | `department` | pm_resource.pm_department | IT, Business | No |
 | `enhancement_type` | pm_project.pm_enhancementtype | New Integration, BAU Enhancement | No |
@@ -325,7 +328,11 @@ Values: `G`, `A`, `R`
 | pm_project | pm_requirement | pm_projectname |
 | pm_project | pm_control | pm_projectname |
 | pm_project | pm_epic | pm_projectname |
-| pm_project | pm_risk | pm_projectname |
+| pm_project | pm_control | pm_projectname |
+| pm_product | pm_risk | pm_productname |
+| pm_product | pm_dependency | pm_productname |
+| pm_requirement | pm_risk | pm_requirementid |
+| pm_requirement | pm_dependency | pm_requirementid |
 | pm_epic | pm_userstory | pm_epicid |
 | pm_risk | pm_dependency | pm_riskid |
 | pm_dependency | pm_demand | pm_riskid |

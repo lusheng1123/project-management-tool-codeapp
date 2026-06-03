@@ -83,12 +83,14 @@ export const MODELS: Record<string, Model> = {
   pm_risk: { name: 'Risk', fields: [
     { name: 'pm_summary', label: 'Risk Summary', type: 'text', required: true },
     { name: 'pm_detail', label: 'Risk Detail', type: 'multiline' },
-    { name: 'pm_projectname', label: 'Project', type: 'lookup', target: 'pm_project' }
+    { name: 'pm_productname', label: 'Product', type: 'lookup', target: 'pm_product' },
+    { name: 'pm_requirementid', label: 'Requirement', type: 'lookup', target: 'pm_requirement' }
   ]},
   pm_dependency: { name: 'Dependency', fields: [
     { name: 'pm_summary', label: 'Dependency Summary', type: 'text', required: true },
     { name: 'pm_detail', label: 'Dependency Detail', type: 'multiline' },
-    { name: 'pm_riskid', label: 'Risk', type: 'lookup', target: 'pm_risk' }
+    { name: 'pm_productname', label: 'Product', type: 'lookup', target: 'pm_product' },
+    { name: 'pm_requirementid', label: 'Requirement', type: 'lookup', target: 'pm_requirement' }
   ]},
   pm_demand: { name: 'Demand', fields: [
     { name: 'pm_title', label: 'Title', type: 'text', required: true },
@@ -96,6 +98,7 @@ export const MODELS: Record<string, Model> = {
     { name: 'pm_type', label: 'Type', type: 'text' },
     { name: 'pm_priority', label: 'Priority', type: 'text' },
     { name: 'pm_status', label: 'Status', type: 'text' },
+    { name: 'pm_valuestream', label: 'Value Stream', type: 'text' },
     { name: 'pm_capability', label: 'Capability', type: 'lookup', target: 'pm_capability' },
     { name: 'pm_product', label: 'Product', type: 'lookup', target: 'pm_product', required: true },
     { name: 'pm_submitted_by', label: 'Submitted By', type: 'text' },

@@ -13,8 +13,8 @@ export const DS = {
   getCapabilitiesByProduct(prodId: string) { const links = this.query('pm_capabilityproduct', { pm_productname: prodId }); const caps = this.getAll('pm_capability'); return links.map((l: any) => caps.find((c: any) => c.id === l.pm_capabilityid)).filter(Boolean) },
   getEpicsByProject(projId: string) { return this.query('pm_epic', { pm_projectname: projId }) },
   getUserStoriesByEpic(epicId: string) { return this.query('pm_userstory', { pm_epicid: epicId }) },
-  getRisksByProject(projId: string) { return this.query('pm_risk', { pm_projectname: projId }) },
-  getDependenciesByRisk(riskId: string) { return this.query('pm_dependency', { pm_riskid: riskId }) },
+  getRisksByProduct(prodId: string) { return this.query('pm_risk', { pm_productname: prodId }) },
+  getDependenciesByProduct(prodId: string) { return this.query('pm_dependency', { pm_productname: prodId }) },
   getLookupName(table: string, id: string): string { if (!id) return '—'; const rec = this.getById(table, id); return rec ? (rec.pm_name || rec.pm_title || rec.pm_summary || rec.pm_detail || rec.id) : '—' },
   getResourceName(id: string): string { return this.getLookupName('pm_resource', id) }
 }

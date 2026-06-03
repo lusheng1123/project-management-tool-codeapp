@@ -121,6 +121,7 @@ const { canDo } = useRole()
 | Type | pm_type | Single Line of Text (50) | `pm_config` type=`demand_type` |
 | Priority | pm_priority | Single Line of Text (50) | `pm_config` type=`priority` |
 | Status | pm_status | Single Line of Text (50) | `pm_config` type=`demand_status` |
+| Value Stream | pm_valuestream | Single Line of Text (50) | `pm_config` type=`value_stream` |
 | Capability | pm_capability | Lookup → pm_capability | Target capability |
 | Product | pm_product | Lookup → pm_product (Required) | Target application |
 | Submitted By | pm_submitted_by | Single Line of Text (100) | |

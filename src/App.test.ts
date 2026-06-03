@@ -264,13 +264,13 @@ describe('DS relationship methods (seeded)', () => {
     expect(stories.length).toBeGreaterThan(0)
   })
 
-  it('getRisksByProject returns risks', () => {
-    const risks = DS.getRisksByProject('proj_1')
+  it('getRisksByProduct returns risks', () => {
+    const risks = DS.getRisksByProduct('prod_1')
     expect(risks.length).toBeGreaterThan(0)
   })
 
-  it('getDependenciesByRisk returns deps', () => {
-    const deps = DS.getDependenciesByRisk('risk_1')
+  it('getDependenciesByProduct returns deps', () => {
+    const deps = DS.getDependenciesByProduct('prod_1')
     expect(deps.length).toBeGreaterThan(0)
   })
 })
