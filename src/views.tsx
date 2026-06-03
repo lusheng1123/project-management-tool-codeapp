@@ -1,0 +1,12 @@
+// Barrel file — imports all views and re-exports them
+export { ResourcesView } from './views/ResourcesView'
+export { CapabilitiesView } from './views/CapabilitiesView'
+export { ProductsView } from './views/ProductsView'
+export { RequirementsView } from './views/RequirementsView'
+export { ProjectsView } from './views/ProjectsView'
+export { EpicsView } from './views/EpicsView'
+export { UserStoriesView } from './views/UserStoriesView'
+export { RisksView } from './views/RisksView'
+export { DependenciesView } from './views/DependenciesView'
+export { ReleasesView } from './views/ReleasesView'
+export { ConfigView } from './views/ConfigView'

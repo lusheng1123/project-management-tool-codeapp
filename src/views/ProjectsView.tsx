@@ -1,0 +1,41 @@
+import { useState, useEffect, useMemo, Fragment } from 'react'
+import { DS } from '../data'
+import { getFields } from '../models'
+import { useUI, badgeClass } from '../context/UIContext'
+import { useSearch } from '../context/SearchContext'
+import { StatsCards } from '../components/StatsCards'
+import { SearchBar } from '../components/SearchBar'
+import { EmptyState } from '../components/EmptyState'
+import { PipelineBoard } from '../components/PipelineBoard'
+
+export function ProjectsView() {
+  const [data, setData] = useState<any[]>([]); const [expanded, setExpanded] = useState<Set<string>>(new Set()); const [key, setKey] = useState(0); const reload = () => setKey(k => k + 1); const { showToast, showModal } = useUI()
+  useEffect(() => { setData(DS.getAll('pm_project')) }, [key])
+  const reqs = useMemo(() => DS.getAll('pm_requirement'), [key]); const risks = useMemo(() => DS.getAll('pm_risk'), [key]); const epics = useMemo(() => DS.getAll('pm_epic'), [key]); const stories = useMemo(() => DS.getAll('pm_userstory'), [key])
+  const toggle = (id: string) => { setExpanded(prev => { const s = new Set(prev); if (s.has(id)) s.delete(id); else s.add(id); return s }) }
+  const openEditProject = (id: string) => { const rec = DS.getById('pm_project', id); const products = DS.getAll('pm_product'); const etConfigs = DS.query('pm_config', { pm_type: 'enhancement_type' }); const prConfigs = DS.query('pm_config', { pm_type: 'priority' }); showModal({ title: 'Edit Project', fields: getFields('pm_project').filter(f => f.name !== 'pm_productname' && f.name !== 'pm_enhancementtype' && f.name !== 'pm_priority'), data: rec, extraContent: (<div><label>Product</label><select id="projProduct" data-extra defaultValue={rec.pm_productname || ''}><option value="">None</option>{products.map((p: any) => <option key={p.id} value={p.id}>{p.pm_name}</option>)}</select><label>Enhancement Type</label><select id="projET" data-extra defaultValue={rec.pm_enhancementtype || ''}><option value="">None</option>{etConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select><label>Priority</label><select id="projPR" data-extra defaultValue={rec.pm_priority || ''}><option value="">None</option>{prConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select></div>), onSave: (fd) => { fd.pm_productname = (document.getElementById('projProduct') as HTMLSelectElement).value; fd.pm_enhancementtype = (document.getElementById('projET') as HTMLSelectElement)?.value || ''; fd.pm_priority = (document.getElementById('projPR') as HTMLSelectElement)?.value || ''; DS.update('pm_project', id, fd); reload(); showToast('Project updated!') }, onDelete: () => { DS.delete('pm_project', id); reload(); showToast('Project deleted!') } }) }
+  const showPipeline = () => { showModal({ title: '📊 Project Pipeline', fields: [], wide: true, extraContent: (<PipelineBoard projects={data} onUpdate={(id, stage) => { DS.update('pm_project', id, { pm_status: stage }); reload() }} />), onSave: () => { reload() } }) }
+  const { term } = useSearch(); const filtered = term ? data.filter((p: any) => Object.values(p).some(v => String(v ?? '').toLowerCase().includes(term.toLowerCase()))) : data
+  return (
+    <div>
+      <div className="dashboard-header"><h2>📁 Project Dashboard</h2><div style={{ display: 'flex', gap: 8 }}><button className="btn btn-primary" onClick={() => { const prods = DS.getAll('pm_product'); const etConfigs = DS.query('pm_config', { pm_type: 'enhancement_type' }); const prConfigs = DS.query('pm_config', { pm_type: 'priority' }); showModal({ title: 'New Project', fields: getFields('pm_project').filter(f => f.name !== 'pm_productname' && f.name !== 'pm_enhancementtype' && f.name !== 'pm_priority'), extraContent: (<div><label>Product</label><select id="projProduct" data-extra><option value="">None</option>{prods.map((p: any) => <option key={p.id} value={p.id}>{p.pm_name}</option>)}</select><label>Enhancement Type</label><select id="projET" data-extra><option value="">None</option>{etConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select><label>Priority</label><select id="projPR" data-extra><option value="">None</option>{prConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select></div>), onSave: (fd) => { fd.pm_productname = (document.getElementById('projProduct') as HTMLSelectElement).value; fd.pm_enhancementtype = (document.getElementById('projET') as HTMLSelectElement)?.value || ''; fd.pm_priority = (document.getElementById('projPR') as HTMLSelectElement)?.value || ''; DS.create('pm_project', fd); reload(); showToast('Project created!') } }) }}>+ New Project</button><button className="btn btn-link" onClick={showPipeline} style={{ background: 'var(--primary-bg)', color: 'var(--primary-dark)', border: '1px solid rgba(99,102,241,.2)' }}>📊 Pipeline</button></div></div>
+      <StatsCards stats={[{ value: data.length, label: 'Projects' },{ value: data.filter((p: any) => p.pm_status !== 'Live').length, label: 'Active' },{ value: data.filter((p: any) => p.pm_status === 'Live').length, label: 'Live' },{ value: reqs.filter((r: any) => r.pm_projectname).length, label: 'Requirements' }]} />
+      <SearchBar />
+      {!filtered.length ? <EmptyState msg="No projects found" /> : (
+        <table className="data-table"><thead><tr><th>Project</th><th>Product</th><th>Status</th><th>Completion</th><th>Effort (Act/Est)</th><th>Related</th><th>Actions</th></tr></thead>
+        <tbody>{filtered.map((proj: any) => {
+          const pr = reqs.filter((r: any) => r.pm_projectname === proj.id); const rc = risks.filter((r: any) => r.pm_projectname === proj.id).length; const isExp = expanded.has(proj.id)
+          const projEpics = epics.filter((e: any) => e.pm_projectname === proj.id)
+          const totalActual = projEpics.reduce((sum: number, e: any) => sum + stories.filter((s: any) => s.pm_epicid === e.id).reduce((s2: number, st: any) => s2 + (Number(st.pm_storypoint) || 0), 0), 0)
+          const totalEstimated = projEpics.reduce((sum: number, e: any) => sum + (Number(e.pm_estimatedeffort) || 0), 0)
+          const effDisplay = totalEstimated ? `${totalActual}d / ${totalEstimated}d` : `${totalActual}d`
+          return (<Fragment key={proj.id}>
+            <tr className={`data-row${isExp ? ' project-row-expanded' : ''} project-main-row`} onClick={() => toggle(proj.id)} style={{ cursor: 'pointer' }}><td><strong>{proj.pm_name}</strong><br /><small>{proj.pm_scope?.substring(0, 80)}{proj.pm_scope?.length > 80 ? '...' : ''}</small></td><td>{DS.getLookupName('pm_product', proj.pm_productname)}</td><td><span className={`badge ${badgeClass(proj.pm_status)}`}>{proj.pm_status}</span></td><td>{proj.pm_overallcompletion || 0}%</td><td><span style={{ fontWeight: 700 }}>{effDisplay}</span></td><td>{pr.length} reqs, {rc} risks</td><td className="actions-cell" onClick={e => e.stopPropagation()}><button className="btn-sm btn-edit" onClick={() => openEditProject(proj.id)}>✏️ Edit</button><button className="btn-sm btn-delete" onClick={() => { if (confirm('Delete this project?')) { DS.delete('pm_project', proj.id); reload(); showToast('Project deleted!') } }}>🗑️</button></td></tr>
+            {isExp && pr.map((r: any) => { const capName = DS.getLookupName('pm_capability', r.pm_capabilityid); const pscBadge = r.pm_pscapprovalrequired === 'Yes' ? badgeClass(r.pm_pscapprovalstatus) : ''; return (<tr key={r.id} className="project-epic-row"><td colSpan={7}><div className="project-epic-item"><span className={`badge ${badgeClass(r.pm_status)}`}>{r.pm_status}</span><span className="project-epic-name">{r.pm_detail?.substring(0, 80)}</span><span className="project-epic-meta">Capability: {capName}</span>{pscBadge && <span className="project-epic-devs">PSC: <span className={`badge ${pscBadge}`}>{r.pm_pscapprovalstatus}</span></span>}</div></td></tr>) })}
+          </Fragment>)
+        })}</tbody></table>
+      )}
+    </div>
+  )
+}
+
