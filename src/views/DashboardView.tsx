@@ -2,11 +2,13 @@ import { useState, useMemo } from 'react'
 import { DS } from '../data'
 import { badgeClass } from '../context/UIContext'
 import { useNavigation } from '../context/NavigationContext'
+import { useRole } from '../context/RoleContext'
 import { StatsCards } from '../components/StatsCards'
 
 export function DashboardView() {
   const [key] = useState(0)
   const { navigate } = useNavigation()
+  const { hasRole } = useRole()
   const demands = useMemo(() => DS.getAll('pm_demand'), [key])
   const risks = useMemo(() => DS.getAll('pm_risk'), [key])
   const deps = useMemo(() => DS.getAll('pm_dependency'), [key])
@@ -15,8 +17,18 @@ export function DashboardView() {
   const products = useMemo(() => DS.getAll('pm_product'), [key])
   const vsConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'value_stream' }), [key])
 
-  const pendingDemands = demands.filter((d: any) => !['Converted', 'Rejected'].includes(d.pm_status))
-  const pendingSignoffs = releaseItems.filter((ri: any) => ri.pm_signoff_status === 'Pending')
+  const pendingDemands = demands.filter((d: any) => {
+    if (d.pm_status === 'Converted' || d.pm_status === 'Rejected') return false
+    if (hasRole('Admin')) return true
+    if (hasRole('PM')) return ['Submitted','Triaging','Approved'].includes(d.pm_status)
+    if (hasRole('PO')) return d.pm_status === 'Assessed'
+    return false
+  })
+  const pendingSignoffs = releaseItems.filter((ri: any) => {
+    if (ri.pm_signoff_status !== 'Pending') return false
+    if (hasRole('Admin') || hasRole('PO') || hasRole('Release Manager') || hasRole('PM')) return true
+    return false
+  })
   const activeReleases = releases.filter((r: any) => ['Open', 'In Review'].includes(r.pm_status))
   const getProduct = (id: string) => products.find((p: any) => p.id === id)
   const getVS = (id: string) => vsConfigs.find((c: any) => c.id === id)?.pm_name

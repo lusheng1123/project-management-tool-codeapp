@@ -8,13 +8,46 @@ import { StatsCards } from '../components/StatsCards'
 import { SearchBar } from '../components/SearchBar'
 import { EmptyState } from '../components/EmptyState'
 
+const ACTION_LABEL: Record<string, string> = {
+  Triaging: '🔍 Start Triage',
+  Assessed: '📋 Assess',
+  'PSC Review': '🔍 PSC Review',
+  Approved: '✅ Approve',
+  Converted: '🔄 Convert'
+}
+
 export function DemandView() {
   const [data, setData] = useState<any[]>([]); const [expanded, setExpanded] = useState<Set<string>>(new Set()); const [key, setKey] = useState(0); const reload = () => setKey(k => k + 1); const { showToast, showModal } = useUI()
   const { focusId, clearFocus } = useNavigation()
   useEffect(() => { setData(DS.getAll('pm_demand')) }, [key])
-  const capabilities = useMemo(() => DS.getAll('pm_capability'), [key]); const products = useMemo(() => DS.getAll('pm_product'), [key]); const requirements = useMemo(() => DS.getAll('pm_requirement'), [key]); const vsConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'value_stream' }), [key])
+  const capabilities = useMemo(() => DS.getAll('pm_capability'), [key])
+  const products = useMemo(() => DS.getAll('pm_product'), [key])
+  const requirements = useMemo(() => DS.getAll('pm_requirement'), [key])
+  const vsConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'value_stream' }), [key])
+  const flowConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'demand_flow' }), [key])
+  const dtConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'demand_type' }), [key])
+  const prConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'priority' }), [key])
+
   const toggle = (id: string) => { setExpanded(prev => { const s = new Set(prev); if (s.has(id)) s.delete(id); else s.add(id); return s }) }
   const { term } = useSearch()
+  const filtered = term ? data.filter((d: any) => Object.values(d).some(v => String(v ?? '').toLowerCase().includes(term.toLowerCase()))) : data
+
+  const getVSName = (vsId: string) => vsConfigs.find((c: any) => c.id === vsId)?.pm_name || ''
+
+  const getFlowStatuses = (vsId: string): string[] => {
+    const vsName = getVSName(vsId)
+    if (!vsName) return ['Submitted', 'Triaging', 'Assessed', 'Approved', 'Converted']
+    return flowConfigs
+      .filter((c: any) => c.pm_name.startsWith(vsName + ':'))
+      .sort((a: any, b: any) => parseInt(a.pm_name.split(':').pop()) - parseInt(b.pm_name.split(':').pop()))
+      .map((c: any) => c.pm_description)
+  }
+
+  const getNextStatus = (demand: any): string | null => {
+    const flow = getFlowStatuses(demand.pm_valuestream)
+    const idx = flow.indexOf(demand.pm_status)
+    return idx >= 0 && idx < flow.length - 1 ? flow[idx + 1] : null
+  }
 
   useEffect(() => {
     if (!focusId) return
@@ -27,12 +60,8 @@ export function DemandView() {
       clearFocus()
     }, 120)
   }, [focusId])
-  const filtered = term ? data.filter((d: any) => Object.values(d).some(v => String(v ?? '').toLowerCase().includes(term.toLowerCase()))) : data
 
   const changeStatus = (id: string, newStatus: string) => { DS.update('pm_demand', id, { pm_status: newStatus }); reload(); showToast(`Demand ${newStatus}!`) }
-  const startTriage = (id: string) => changeStatus(id, 'Triaging')
-  const assess = (id: string) => changeStatus(id, 'Assessed')
-  const approve = (id: string) => changeStatus(id, 'Approved')
   const reject = (id: string) => changeStatus(id, 'Rejected')
 
   const openConvert = (demId: string) => {
@@ -46,25 +75,31 @@ export function DemandView() {
 
   const openEdit = (id: string) => {
     const rec = DS.getById('pm_demand', id); if (!rec) return
-    const dtConfigs = DS.query('pm_config', { pm_type: 'demand_type' }); const prConfigs = DS.query('pm_config', { pm_type: 'priority' }); const dsConfigs = DS.query('pm_config', { pm_type: 'demand_status' })
-    showModal({ title: 'Edit Demand', fields: getFields('pm_demand').filter(f => !['pm_type', 'pm_priority', 'pm_status', 'pm_valuestream', 'pm_capability', 'pm_product', 'pm_converted_to', 'pm_converted_date'].includes(f.name)), data: rec, extraContent: (<div><label>Type</label><select id="demType" data-extra defaultValue={rec.pm_type || ''}><option value="">None</option>{dtConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select><label>Priority</label><select id="demPriority" data-extra defaultValue={rec.pm_priority || ''}><option value="">None</option>{prConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select><label>Status</label><select id="demStatus" data-extra defaultValue={rec.pm_status || ''}><option value="">None</option>{dsConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select><label>Value Stream</label><select id="demVS" data-extra defaultValue={rec.pm_valuestream || ''}><option value="">None</option>{vsConfigs.map((c: any) => <option key={c.id} value={c.id}>{c.pm_name}</option>)}</select><label>Capability</label><select id="demCap" data-extra defaultValue={rec.pm_capability || ''}><option value="">None</option>{capabilities.map((c: any) => <option key={c.id} value={c.id}>{c.pm_name}</option>)}</select><label>Product</label><select id="demProd" data-extra defaultValue={rec.pm_product || ''}><option value="">None</option>{products.map((p: any) => <option key={p.id} value={p.id}>{p.pm_name}</option>)}</select></div>), onSave: (fd) => { fd.pm_type = (document.getElementById('demType') as HTMLSelectElement)?.value || ''; fd.pm_priority = (document.getElementById('demPriority') as HTMLSelectElement)?.value || ''; fd.pm_status = (document.getElementById('demStatus') as HTMLSelectElement)?.value || ''; fd.pm_valuestream = (document.getElementById('demVS') as HTMLSelectElement)?.value || ''; fd.pm_capability = (document.getElementById('demCap') as HTMLSelectElement)?.value || ''; fd.pm_product = (document.getElementById('demProd') as HTMLSelectElement)?.value || ''; DS.update('pm_demand', id, fd); reload(); showToast('Demand updated!') }, onDelete: () => { DS.delete('pm_demand', id); reload(); showToast('Demand deleted!') } })
+    const flowStatuses = getFlowStatuses(rec.pm_valuestream)
+    const statusOptions = flowStatuses.length > 0 ? flowStatuses : ['Submitted','Triaging','Assessed','Approved','Rejected','Converted']
+    showModal({ title: 'Edit Demand', fields: getFields('pm_demand').filter(f => !['pm_type', 'pm_priority', 'pm_status', 'pm_valuestream', 'pm_capability', 'pm_product', 'pm_converted_to', 'pm_converted_date'].includes(f.name)), data: rec, extraContent: (<div><label>Type</label><select id="demType" data-extra defaultValue={rec.pm_type || ''}><option value="">None</option>{dtConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select><label>Priority</label><select id="demPriority" data-extra defaultValue={rec.pm_priority || ''}><option value="">None</option>{prConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select><label>Status</label><select id="demStatus" data-extra defaultValue={rec.pm_status || ''}><option value="">None</option>{statusOptions.map((s: string) => <option key={s} value={s}>{s}</option>)}</select><label>Value Stream</label><select id="demVS" data-extra defaultValue={rec.pm_valuestream || ''} onInput={() => { /* refresh status dropdown on VS change */ }}><option value="">None</option>{vsConfigs.map((c: any) => <option key={c.id} value={c.id}>{c.pm_name}</option>)}</select><label>Capability</label><select id="demCap" data-extra defaultValue={rec.pm_capability || ''}><option value="">None</option>{capabilities.map((c: any) => <option key={c.id} value={c.id}>{c.pm_name}</option>)}</select><label>Product</label><select id="demProd" data-extra defaultValue={rec.pm_product || ''}><option value="">None</option>{products.map((p: any) => <option key={p.id} value={p.id}>{p.pm_name}</option>)}</select></div>), onSave: (fd) => { fd.pm_type = (document.getElementById('demType') as HTMLSelectElement)?.value || ''; fd.pm_priority = (document.getElementById('demPriority') as HTMLSelectElement)?.value || ''; fd.pm_status = (document.getElementById('demStatus') as HTMLSelectElement)?.value || ''; fd.pm_valuestream = (document.getElementById('demVS') as HTMLSelectElement)?.value || ''; fd.pm_capability = (document.getElementById('demCap') as HTMLSelectElement)?.value || ''; fd.pm_product = (document.getElementById('demProd') as HTMLSelectElement)?.value || ''; DS.update('pm_demand', id, fd); reload(); showToast('Demand updated!') }, onDelete: () => { DS.delete('pm_demand', id); reload(); showToast('Demand deleted!') } })
   }
 
   return (
     <div>
-      <div className="dashboard-header"><h2>📥 Demand Intake</h2><button className="btn btn-primary" onClick={() => { const dtConfigs = DS.query('pm_config', { pm_type: 'demand_type' }); const prConfigs = DS.query('pm_config', { pm_type: 'priority' }); showModal({ title: 'Raise New Demand', fields: getFields('pm_demand').filter(f => !['pm_type', 'pm_priority', 'pm_status', 'pm_valuestream', 'pm_capability', 'pm_product', 'pm_submitted_date', 'pm_converted_to', 'pm_converted_date'].includes(f.name)), extraContent: (<div><label>Type</label><select id="demType" data-extra><option value="">Select Type...</option>{dtConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select><label>Priority</label><select id="demPriority" data-extra><option value="">Select Priority...</option>{prConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select><label>Value Stream</label><select id="demVS" data-extra><option value="">None</option>{vsConfigs.map((c: any) => <option key={c.id} value={c.id}>{c.pm_name}</option>)}</select><label>Capability</label><select id="demCap" data-extra><option value="">None</option>{capabilities.map((c: any) => <option key={c.id} value={c.id}>{c.pm_name}</option>)}</select><label>Product</label><select id="demProd" data-extra><option value="">None</option>{products.map((p: any) => <option key={p.id} value={p.id}>{p.pm_name}</option>)}</select></div>), onSave: (fd) => { fd.pm_type = (document.getElementById('demType') as HTMLSelectElement)?.value || ''; fd.pm_priority = (document.getElementById('demPriority') as HTMLSelectElement)?.value || ''; fd.pm_valuestream = (document.getElementById('demVS') as HTMLSelectElement)?.value || ''; fd.pm_capability = (document.getElementById('demCap') as HTMLSelectElement)?.value || ''; fd.pm_product = (document.getElementById('demProd') as HTMLSelectElement)?.value || ''; fd.pm_status = 'Submitted'; fd.pm_submitted_date = new Date().toISOString().slice(0, 10); DS.create('pm_demand', fd); reload(); showToast('Demand submitted!') } }) }}>+ Raise Demand</button></div>
+      <div className="dashboard-header"><h2>📥 Demand Intake</h2><button className="btn btn-primary" onClick={() => { showModal({ title: 'Raise New Demand', fields: getFields('pm_demand').filter(f => !['pm_type', 'pm_priority', 'pm_status', 'pm_valuestream', 'pm_capability', 'pm_product', 'pm_submitted_date', 'pm_converted_to', 'pm_converted_date'].includes(f.name)), extraContent: (<div><label>Type</label><select id="demType" data-extra><option value="">Select Type...</option>{dtConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select><label>Priority</label><select id="demPriority" data-extra><option value="">Select Priority...</option>{prConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select><label>Value Stream</label><select id="demVS" data-extra><option value="">None</option>{vsConfigs.map((c: any) => <option key={c.id} value={c.id}>{c.pm_name}</option>)}</select><label>Capability</label><select id="demCap" data-extra><option value="">None</option>{capabilities.map((c: any) => <option key={c.id} value={c.id}>{c.pm_name}</option>)}</select><label>Product *</label><select id="demProd" data-extra><option value="">Select Product...</option>{products.map((p: any) => <option key={p.id} value={p.id}>{p.pm_name}</option>)}</select></div>), onSave: (fd) => { fd.pm_type = (document.getElementById('demType') as HTMLSelectElement)?.value || ''; fd.pm_priority = (document.getElementById('demPriority') as HTMLSelectElement)?.value || ''; fd.pm_valuestream = (document.getElementById('demVS') as HTMLSelectElement)?.value || ''; fd.pm_capability = (document.getElementById('demCap') as HTMLSelectElement)?.value || ''; fd.pm_product = (document.getElementById('demProd') as HTMLSelectElement)?.value || ''; fd.pm_status = 'Submitted'; fd.pm_submitted_date = new Date().toISOString().slice(0, 10); DS.create('pm_demand', fd); reload(); showToast('Demand submitted!') } }) }}>+ Raise Demand</button></div>
       <StatsCards stats={[{ value: data.length, label: 'Total' },{ value: data.filter((d: any) => d.pm_status === 'Submitted').length, label: 'Submitted' },{ value: data.filter((d: any) => d.pm_status === 'Triaging').length, label: 'Triaging' },{ value: data.filter((d: any) => d.pm_status === 'Assessed').length, label: 'Assessed' },{ value: data.filter((d: any) => d.pm_status === 'Approved').length, label: 'Approved' },{ value: data.filter((d: any) => d.pm_status === 'Converted').length, label: 'Converted' }]} />
       <SearchBar />
       {!filtered.length ? <EmptyState msg="No demands found" /> : (
         <table className="data-table"><thead><tr><th>Title</th><th>Type</th><th>Priority</th><th>Status</th><th>Product</th><th>Value Stream</th><th>Capability</th><th>Actions</th></tr></thead>
         <tbody>{filtered.map((dem: any) => {
           const cap = capabilities.find((c: any) => c.id === dem.pm_capability); const prod = products.find((p: any) => p.id === dem.pm_product); const convertedReq = dem.pm_converted_to ? requirements.find((r: any) => r.id === dem.pm_converted_to) : null; const vs = dem.pm_valuestream ? vsConfigs.find((c: any) => c.id === dem.pm_valuestream) : null; const isExp = expanded.has(dem.id)
+          const next = getNextStatus(dem)
+          const isTerminal = dem.pm_status === 'Converted' || dem.pm_status === 'Rejected'
+          const canReject = !isTerminal && dem.pm_status !== 'Converted' && next
           return (<Fragment key={dem.id}>
             <tr id={`row-${dem.id}`} className={`data-row${isExp ? ' project-row-expanded' : ''} project-main-row`} onClick={() => toggle(dem.id)} style={{ cursor: 'pointer' }}><td><strong>{dem.pm_title}</strong></td><td><span className="badge badge-gray">{dem.pm_type || '—'}</span></td><td><span className={`badge ${badgeClass(dem.pm_priority)}`}>{dem.pm_priority || '—'}</span></td><td><span className={`badge ${badgeClass(dem.pm_status)}`}>{dem.pm_status}</span></td><td>{prod?.pm_name || '—'}</td><td>{vs?.pm_name || '—'}</td><td>{cap?.pm_name || '—'}</td><td className="actions-cell" onClick={e => e.stopPropagation()}>
-              {dem.pm_status === 'Submitted' && <button className="btn-sm btn-link" onClick={() => startTriage(dem.id)}>🔍 Start Triage</button>}
-              {dem.pm_status === 'Triaging' && <><button className="btn-sm btn-link" onClick={() => assess(dem.id)}>📋 Assess</button><button className="btn-sm btn-delete" onClick={() => reject(dem.id)}>❌ Reject</button></>}
-              {dem.pm_status === 'Assessed' && <><button className="btn-sm btn-edit" onClick={() => approve(dem.id)}>✅ Approve</button><button className="btn-sm btn-delete" onClick={() => reject(dem.id)}>❌ Reject</button></>}
-              {dem.pm_status === 'Approved' && <button className="btn-sm btn-edit" onClick={() => openConvert(dem.id)}>🔄 Convert</button>}
+              {!isTerminal && next && (
+                next === 'Converted'
+                  ? <button className="btn-sm btn-edit" onClick={() => openConvert(dem.id)}>🔄 Convert</button>
+                  : <button className="btn-sm btn-link" onClick={() => changeStatus(dem.id, next)}>{ACTION_LABEL[next] || '→ ' + next}</button>
+              )}
+              {canReject && <button className="btn-sm btn-delete" onClick={() => reject(dem.id)}>❌ Reject</button>}
               <button className="btn-sm btn-edit" onClick={() => openEdit(dem.id)}>✏️ Edit</button>
               <button className="btn-sm btn-delete" onClick={() => { if (confirm('Delete this demand?')) { DS.delete('pm_demand', dem.id); reload(); showToast('Demand deleted!') } }}>🗑️</button>
             </td></tr>

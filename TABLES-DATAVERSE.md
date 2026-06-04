@@ -260,7 +260,9 @@ All configurable values live in `pm_config`. Add/edit/remove values in the âš™ï¸
 | `yes_no` | pm_requirement.pm_pscapprovalrequired | Yes, No | **Yes** |
 | `tool` | pm_releaseitem.pm_tool | Jira, Azure DevOps, GitHub, ServiceNow, Jenkins | No |
 | `demand_type` | pm_demand.pm_type | Feature, Bug, Enhancement, Tech Debt | No |
-| `demand_status` | pm_demand.pm_status | Submitted, Triaging, Assessed, Approved, Rejected, Converted | **Yes** |
+| `demand_status` | pm_demand.pm_status | Submitted, Triaging, Assessed, PSC Review, Approved, Rejected, Converted | **Yes** |
+| `demand_flow` | pm_demand (workflow) | Per-value-stream status progression (pm_name=VS:order, pm_description=status) | **Yes** |
+| `user_role` | pm_user.pm_role | Admin, PM, PO, Developer, Release Manager, Viewer (comma-separated for multi-role) | **Yes** |
 
 > **Yes** = values matched in `badgeClass()` or view logic. Renaming breaks colors/behavior. Adding new values gets `badge-gray` (safe default). **No** = pure labels, freely editable.
 
@@ -359,9 +361,10 @@ Values: `G`, `A`, `R`
 | pm_userstory | 13 |
 | pm_risk | 6 |
 | pm_dependency | 6 |
-| pm_config | 71 entries (18 types) |
+| pm_config | 93 entries (21 types) |
 | pm_demand | 5 |
 | pm_release | 3 |
 | pm_releaseitem | 11 |
 | pm_assignment | 11 |
-| **Total** | **~230 records** |
+| pm_user | 7 |
+| **Total** | **~270 records** |

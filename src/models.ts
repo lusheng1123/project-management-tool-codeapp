@@ -126,11 +126,18 @@ export const MODELS: Record<string, Model> = {
     { name: 'pm_tool', label: 'Tool', type: 'text' }
   ]},
    pm_config: { name: 'Configuration', fields: [
-     { name: 'pm_type', label: 'Type', type: 'text', required: true },
-     { name: 'pm_name', label: 'Name', type: 'text', required: true },
-     { name: 'pm_description', label: 'Description', type: 'text' },
-     { name: 'pm_hardcoded', label: 'Code Change?', type: 'choice', choices: ['No', 'Yes'] }
-   ]}
+      { name: 'pm_type', label: 'Type', type: 'text', required: true },
+      { name: 'pm_name', label: 'Name', type: 'text', required: true },
+      { name: 'pm_description', label: 'Description', type: 'text' },
+      { name: 'pm_hardcoded', label: 'Code Change?', type: 'choice', choices: ['No', 'Yes'] }
+    ]},
+   pm_user: { name: 'User', fields: [
+      { name: 'pm_username', label: 'Username', type: 'text', required: true },
+      { name: 'pm_displayname', label: 'Display Name', type: 'text', required: true },
+      { name: 'pm_role', label: 'Role', type: 'text' },
+      { name: 'pm_email', label: 'Email', type: 'email' },
+      { name: 'pm_status', label: 'Status', type: 'text' }
+    ]}
 }
 
 export function getFields(tableName: string): FieldDef[] { return MODELS[tableName]?.fields ?? [] }
