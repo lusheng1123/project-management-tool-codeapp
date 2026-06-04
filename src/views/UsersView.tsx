@@ -7,6 +7,28 @@ import { StatsCards } from '../components/StatsCards'
 import { SearchBar } from '../components/SearchBar'
 import { EmptyState } from '../components/EmptyState'
 
+const renderRoleCheckboxes = (roleConfigs: any[], currentRoles: string) => {
+  const selected = new Set(currentRoles.split(',').map(r => r.trim()).filter(Boolean))
+  return (
+    <div style={{ marginBottom: '12px' }}>
+      <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Roles</label>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+        {roleConfigs.map((c: any) => (
+          <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: selected.has(c.pm_name) ? 'var(--primary-bg)' : 'var(--surface)', cursor: 'pointer', fontSize: '0.83rem', userSelect: 'none' }}>
+            <input type="checkbox" data-role-checkbox value={c.pm_name} defaultChecked={selected.has(c.pm_name)} style={{ accentColor: 'var(--primary)' }} />
+            {c.pm_name}
+          </label>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const getCheckedRoles = () => {
+  const boxes = document.querySelectorAll<HTMLInputElement>('[data-role-checkbox]')
+  return [...boxes].filter(b => b.checked).map(b => b.value).join(',')
+}
+
 export function UsersView() {
   const [data, setData] = useState<any[]>([]); const [key, setKey] = useState(0); const reload = () => setKey(k => k + 1); const { showToast, showModal } = useUI()
   useEffect(() => { setData(DS.getAll('pm_user')) }, [key])
@@ -16,12 +38,12 @@ export function UsersView() {
 
   const openEdit = (id: string) => {
     const rec = DS.getById('pm_user', id); if (!rec) return
-    showModal({ title: 'Edit User', fields: getFields('pm_user').filter(f => !['pm_role', 'pm_status'].includes(f.name)), data: rec, extraContent: (<div><label>Role</label><select id="userRole" data-extra defaultValue={rec.pm_role || ''}><option value="">Select Role(s)...</option>{roleConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select><small style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '4px' }}>Use comma-separated for multi-role, e.g. "Delivery Lead,Product Owner"</small></div>), onSave: (fd) => { fd.pm_role = (document.getElementById('userRole') as HTMLSelectElement)?.value || ''; fd.pm_status = rec.pm_status || 'Active'; DS.update('pm_user', id, fd); reload(); showToast('User updated!') }, onDelete: () => { DS.delete('pm_user', id); reload(); showToast('User deleted!') } })
+    showModal({ title: 'Edit User', fields: getFields('pm_user').filter(f => !['pm_role', 'pm_status'].includes(f.name)), data: rec, extraContent: renderRoleCheckboxes(roleConfigs, rec.pm_role || ''), onSave: (fd) => { fd.pm_role = getCheckedRoles(); fd.pm_status = rec.pm_status || 'Active'; DS.update('pm_user', id, fd); reload(); showToast('User updated!') }, onDelete: () => { DS.delete('pm_user', id); reload(); showToast('User deleted!') } })
   }
 
   return (
     <div>
-      <div className="dashboard-header"><h2>👤 User Management</h2><button className="btn btn-primary" onClick={() => { showModal({ title: 'New User', fields: getFields('pm_user').filter(f => !['pm_role', 'pm_status'].includes(f.name)), extraContent: (<div><label>Role</label><select id="userRole" data-extra><option value="">Select Role...</option>{roleConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select><small style={{ display: 'block', color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '4px' }}>Use comma-separated for multi-role, e.g. "Delivery Lead,Product Owner"</small></div>), onSave: (fd) => { fd.pm_role = (document.getElementById('userRole') as HTMLSelectElement)?.value || ''; fd.pm_status = 'Active'; DS.create('pm_user', fd); reload(); showToast('User created!') } }) }}>+ New User</button></div>
+      <div className="dashboard-header"><h2>👤 User Management</h2><button className="btn btn-primary" onClick={() => { showModal({ title: 'New User', fields: getFields('pm_user').filter(f => !['pm_role', 'pm_status'].includes(f.name)), extraContent: renderRoleCheckboxes(roleConfigs, ''), onSave: (fd) => { fd.pm_role = getCheckedRoles(); fd.pm_status = 'Active'; DS.create('pm_user', fd); reload(); showToast('User created!') } }) }}>+ New User</button></div>
       <StatsCards stats={[{ value: data.length, label: 'Users' },{ value: data.filter((u: any) => u.pm_status === 'Active').length, label: 'Active' },{ value: data.filter((u: any) => u.pm_role?.includes(',')).length, label: 'Multi-Role' }]} />
       <SearchBar />
       {!filtered.length ? <EmptyState msg="No users found" /> : (
