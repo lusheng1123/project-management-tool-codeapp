@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, Fragment } from 'react'
+import { useState, useEffect, useMemo, useCallback, Fragment } from 'react'
 import { DS } from '../data'
 import { getFields } from '../models'
 import { useUI, badgeClass } from '../context/UIContext'
@@ -9,7 +9,7 @@ import { SearchBar } from '../components/SearchBar'
 import { EmptyState } from '../components/EmptyState'
 
 export function DemandView() {
-  const [data, setData] = useState<any[]>([]); const [expanded, setExpanded] = useState<Set<string>>(new Set()); const [key, setKey] = useState(0); const reload = () => setKey(k => k + 1); const { showToast, showModal } = useUI()
+  const [data, setData] = useState<any[]>([]); const [expanded, setExpanded] = useState<Set<string>>(new Set()); const [openDropdown, setOpenDropdown] = useState<string | null>(null); const [key, setKey] = useState(0); const reload = () => setKey(k => k + 1); const { showToast, showModal } = useUI()
   const { focusId, clearFocus } = useNavigation()
   useEffect(() => { setData(DS.getAll('pm_demand')) }, [key])
   const capabilities = useMemo(() => DS.getAll('pm_capability'), [key])
@@ -41,6 +41,24 @@ export function DemandView() {
     if (idx < 0) return []
     return flow.slice(idx + 1)
   }
+
+  const handleStatusAction = useCallback((demId: string, status: string) => {
+    setOpenDropdown(null)
+    if (status === 'Approved') openConvert(demId)
+    else if (status === 'Rejected') reject(demId)
+    else changeStatus(demId, status)
+  }, [])
+
+  useEffect(() => {
+    if (!openDropdown) return
+    const handler = (e: MouseEvent) => {
+      const el = document.getElementById(`status-popup-${openDropdown}`)
+      const btn = document.getElementById(`status-btn-${openDropdown}`)
+      if (el && !el.contains(e.target as Node) && btn && !btn.contains(e.target as Node)) setOpenDropdown(null)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [openDropdown])
 
   useEffect(() => {
     if (!focusId) return
@@ -88,11 +106,36 @@ export function DemandView() {
           return (<Fragment key={dem.id}>
             <tr id={`row-${dem.id}`} className={`data-row${isExp ? ' project-row-expanded' : ''} project-main-row`} onClick={() => toggle(dem.id)} style={{ cursor: 'pointer' }}><td><strong>{dem.pm_title}</strong></td><td><span className="badge badge-gray">{dem.pm_type || '—'}</span></td><td><span className={`badge ${badgeClass(dem.pm_priority)}`}>{dem.pm_priority || '—'}</span></td><td><span className={`badge ${badgeClass(dem.pm_status)}`}>{dem.pm_status}</span></td><td>{prod?.pm_name || '—'}</td><td>{vs?.pm_name || '—'}</td><td>{cap?.pm_name || '—'}</td><td className="actions-cell" onClick={e => e.stopPropagation()}>
               {showDropdown && (
-                <select style={{ padding: '6px 28px 6px 12px', fontSize: '0.82rem', borderRadius: 'var(--radius-sm)', border: '2px solid var(--primary)', background: 'var(--primary-bg)', cursor: 'pointer', color: 'var(--primary-dark)', fontWeight: 600, appearance: 'auto' }} value="" onChange={(e) => { const val = e.target.value; if (!val) return; if (val === 'Approved') openConvert(dem.id); else if (val === 'Rejected') reject(dem.id); else changeStatus(dem.id, val) }}>
-                  <option value="">▶ Change Status</option>
-                  {available.map((s: string) => <option key={s} value={s}>{s}</option>)}
-                  <option value="Rejected" style={{ color: 'var(--red)' }}>Rejected</option>
-                </select>
+                <div style={{ position: 'relative', display: 'inline-block' }}>
+                  <button id={`status-btn-${dem.id}`} className="btn btn-primary btn-sm" style={{ fontWeight: 600, fontSize: '0.8rem', padding: '6px 16px', position: 'relative' }} onClick={(e) => { e.stopPropagation(); setOpenDropdown(openDropdown === dem.id ? null : dem.id) }}>
+                    Change Status ▾
+                  </button>
+                  {openDropdown === dem.id && (
+                    <div id={`status-popup-${dem.id}`} style={{
+                      position: 'absolute', top: '100%', left: 0, zIndex: 100, marginTop: '4px',
+                      background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)',
+                      boxShadow: 'var(--shadow-lg)', minWidth: '170px', overflow: 'hidden'
+                    }}>
+                      {available.map((s: string) => (
+                        <div key={s} style={{
+                          padding: '8px 14px', fontSize: '0.83rem', cursor: 'pointer', fontWeight: 500,
+                          transition: 'background 0.1s'
+                        }} onClick={(e) => { e.stopPropagation(); handleStatusAction(dem.id, s) }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'var(--primary-bg)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = '')}
+                        >{s}</div>
+                      ))}
+                      <div style={{ borderTop: '1px solid var(--border)' }} />
+                      <div style={{
+                        padding: '8px 14px', fontSize: '0.83rem', cursor: 'pointer', fontWeight: 500,
+                        color: 'var(--red)'
+                      }} onClick={(e) => { e.stopPropagation(); handleStatusAction(dem.id, 'Rejected') }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--red-bg)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = '')}
+                      >Rejected</div>
+                    </div>
+                  )}
+                </div>
               )}
               <button className="btn-sm btn-edit" onClick={() => openEdit(dem.id)}>✏️ Edit</button>
               <button className="btn-sm btn-delete" onClick={() => { if (confirm('Delete this demand?')) { DS.delete('pm_demand', dem.id); reload(); showToast('Demand deleted!') } }}>🗑️</button>
