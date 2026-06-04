@@ -1,13 +1,13 @@
 import { createContext, useContext, useState } from 'react'
 
 const TABS_BY_ROLE: Record<string, string[]> = {
-  Admin: ['dashboard','demand','capabilities','products','projects','requirements','epics','stories','risks','dependencies','releases','resources','users','config'],
-  'Value Stream Owner': ['dashboard','demand','products','capabilities','requirements','epics','stories','risks','dependencies'],
-  'Product Owner': ['dashboard','demand','products','requirements','epics','stories'],
-  'Delivery Lead': ['dashboard','demand','projects','epics','stories','requirements','releases','resources','risks','dependencies'],
-  'Business Analyst': ['dashboard','demand','requirements','products','capabilities'],
-  'Release Manager': ['dashboard','releases','epics','stories','requirements'],
-  ITSO: ['dashboard','demand','risks','dependencies','requirements']
+  Admin: ['dashboard','demand','capabilities','products','projects','requirements','epics','stories','risks','dependencies','releases','sprints','resources','users','config'],
+  'Value Stream Owner': ['dashboard','demand','products','capabilities','requirements','epics','stories','risks','dependencies','sprints'],
+  'Product Owner': ['dashboard','demand','products','requirements','epics','stories','sprints'],
+  'Delivery Lead': ['dashboard','demand','projects','epics','stories','requirements','releases','sprints','resources','risks','dependencies'],
+  'Business Analyst': ['dashboard','demand','requirements','products','capabilities','sprints'],
+  'Release Manager': ['dashboard','releases','sprints','epics','stories','requirements'],
+  ITSO: ['dashboard','demand','risks','dependencies','requirements','sprints']
 }
 
 export function getAllowedTabs(roles: string[]): string[] {
