@@ -46,7 +46,7 @@ export function DashboardView() {
 
       <div style={{ display: 'flex', gap: '20px', marginTop: '20px', flexWrap: 'wrap' }}>
         {/* Left: Pending Action */}
-        <div style={{ flex: '1 1 380px', minWidth: '340px' }}>
+        <div style={{ flex: '1 1 0', minWidth: '340px' }}>
           <div className="card" style={{ padding: '18px' }}>
             <h3 style={{ marginBottom: '14px', fontSize: '1rem', fontWeight: 600 }}>📥 Action Items</h3>
             {pendingDemands.length === 0 && pendingSignoffs.length === 0 && (
@@ -108,7 +108,7 @@ export function DashboardView() {
         </div>
 
         {/* Right: Product Overview + Releases */}
-        <div style={{ flex: '1 1 380px', minWidth: '340px' }}>
+        <div style={{ flex: '1 1 0', minWidth: '340px' }}>
           <div className="card" style={{ padding: '18px', marginBottom: '20px' }}>
             <h3 style={{ marginBottom: '14px', fontSize: '1rem', fontWeight: 600 }}>📦 Product Overview</h3>
             {productSummary.length === 0 ? (
