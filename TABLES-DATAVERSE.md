@@ -356,12 +356,12 @@ Values: `G`, `A`, `R`
 | pm_project | 6 |
 | pm_control | 4 |
 | pm_epic | 6 |
-| pm_userstory | 8 |
+| pm_userstory | 13 |
 | pm_risk | 6 |
 | pm_dependency | 6 |
 | pm_config | 71 entries (18 types) |
 | pm_demand | 5 |
 | pm_release | 3 |
-| pm_releaseitem | 6 |
+| pm_releaseitem | 11 |
 | pm_assignment | 11 |
 | **Total** | **~230 records** |

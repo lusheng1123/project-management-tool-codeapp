@@ -127,7 +127,7 @@ describe('seedAllIfNeeded', () => {
     expect(DS.getAll('pm_project')).toHaveLength(6)
     expect(DS.getAll('pm_control').length).toBeGreaterThan(0)
     expect(DS.getAll('pm_epic')).toHaveLength(6)
-    expect(DS.getAll('pm_userstory')).toHaveLength(8)
+    expect(DS.getAll('pm_userstory')).toHaveLength(13)
     expect(DS.getAll('pm_risk')).toHaveLength(6)
     expect(DS.getAll('pm_dependency')).toHaveLength(6)
     expect(DS.getAll('pm_config').length).toBeGreaterThan(0)
