@@ -24,13 +24,13 @@ function SprintCard({ rel, navigate }: { rel: any; navigate: (t: string, id?: st
       <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
         {rel.pm_releasedate && <div>📅 {rel.pm_releasedate}</div>}
         <div style={{ marginTop: '2px' }}>
-          {rel.storyCount} stories · {rel.signed} signed · {rel.totalSP} SP
+          {rel.storyCount} stories · {rel.signed} signed · {rel.completedSP}/{rel.totalSP} SP
           {rel.pending > 0 && <span style={{ color: 'var(--amber)' }}> · {rel.pending} pending</span>}
         </div>
       </div>
       {rel.pending > 0 && (
         <div style={{ marginTop: '6px', height: '3px', borderRadius: '2px', background: 'var(--border-light)', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${rel.storyCount > 0 ? (rel.signed / rel.storyCount * 100) : 0}%`, background: 'var(--green)', borderRadius: '2px' }} />
+          <div style={{ height: '100%', width: `${rel.totalSP > 0 ? (rel.completedSP / rel.totalSP * 100) : 0}%`, background: 'var(--green)', borderRadius: '2px' }} />
         </div>
       )}
     </div>
@@ -83,6 +83,10 @@ export function SprintView() {
         signed: ri.filter((i: any) => i.pm_signoff_status === 'Approved').length,
         pending: ri.filter((i: any) => i.pm_signoff_status === 'Pending').length,
         totalSP: ri.reduce((sum: number, i: any) => {
+          const s = stories.find((st: any) => st.id === i.pm_userstory)
+          return sum + (s?.pm_storypoint || 0)
+        }, 0),
+        completedSP: ri.filter((i: any) => i.pm_signoff_status === 'Approved').reduce((sum: number, i: any) => {
           const s = stories.find((st: any) => st.id === i.pm_userstory)
           return sum + (s?.pm_storypoint || 0)
         }, 0)
