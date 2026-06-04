@@ -35,7 +35,7 @@ const RoleContext = createContext<{
 
 export function RoleProvider({ children }: { children: React.ReactNode }) {
   const [roleName, setRoleName] = useState(() => localStorage.getItem('pm_current_role') || 'Admin')
-  const roles = roleName.split(',').map(s => s.trim()).filter(Boolean)
+  const roles = [roleName]
   if (roles.length === 0) roles.push('Admin')
 
   const setRole = (r: string) => {

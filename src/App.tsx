@@ -21,7 +21,7 @@ export { badgeClass } from './context/UIContext'
 
 const ALL_TABS = [{ id: 'dashboard', label: '📊 Dashboard' },{ id: 'demand', label: '📥 Demand' },{ id: 'capabilities', label: '🎯 Capabilities' },{ id: 'products', label: '📦 Products' },{ id: 'projects', label: '📁 Projects' },{ id: 'requirements', label: '📋 Requirements' },{ id: 'epics', label: '⚡ Epics' },{ id: 'stories', label: '📝 Stories' },{ id: 'risks', label: '⚠️ Risks' },{ id: 'dependencies', label: '🔗 Deps' },{ id: 'releases', label: '🚀 Releases' },{ id: 'resources', label: '👥 Resources' },{ id: 'users', label: '👤 Users' },{ id: 'config', label: '⚙️ Config' }]
 
-const ROLE_OPTIONS = ['Admin','Value Stream Owner','Product Owner','Delivery Lead','Business Analyst','Release Manager','ITSO','Delivery Lead,Product Owner']
+const ROLE_OPTIONS = ['Admin','Value Stream Owner','Product Owner','Delivery Lead','Business Analyst','Release Manager','ITSO']
 
 function App() {
   const { tab, navigate } = useNavigation()
