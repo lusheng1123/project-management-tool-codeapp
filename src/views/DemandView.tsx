@@ -8,14 +8,6 @@ import { StatsCards } from '../components/StatsCards'
 import { SearchBar } from '../components/SearchBar'
 import { EmptyState } from '../components/EmptyState'
 
-const ACTION_LABEL: Record<string, string> = {
-  Triaging: '🔍 Start Triage',
-  Assessed: '📋 Assess',
-  'PSC Review': '🔍 PSC Review',
-  Approved: '✅ Approve',
-  Converted: '🔄 Convert'
-}
-
 export function DemandView() {
   const [data, setData] = useState<any[]>([]); const [expanded, setExpanded] = useState<Set<string>>(new Set()); const [key, setKey] = useState(0); const reload = () => setKey(k => k + 1); const { showToast, showModal } = useUI()
   const { focusId, clearFocus } = useNavigation()
@@ -40,13 +32,18 @@ export function DemandView() {
     return flowConfigs
       .filter((c: any) => c.pm_name.startsWith(vsName + ':'))
       .sort((a: any, b: any) => parseInt(a.pm_name.split(':').pop()) - parseInt(b.pm_name.split(':').pop()))
-      .map((c: any) => c.pm_description)
+      .map((c: any) => c.pm_description.split('|')[0])
   }
 
-  const getNextStatus = (demand: any): string | null => {
-    const flow = getFlowStatuses(demand.pm_valuestream)
-    const idx = flow.indexOf(demand.pm_status)
-    return idx >= 0 && idx < flow.length - 1 ? flow[idx + 1] : null
+  const getNextLabel = (demand: any): { status: string; label: string } | null => {
+    const vsName = getVSName(demand.pm_valuestream)
+    if (!vsName) return null
+    const steps = flowConfigs
+      .filter((c: any) => c.pm_name.startsWith(vsName + ':'))
+      .sort((a: any, b: any) => parseInt(a.pm_name.split(':').pop()) - parseInt(b.pm_name.split(':').pop()))
+      .map((c: any) => { const [status, label] = c.pm_description.split('|'); return { status, label: label || '' } })
+    const idx = steps.findIndex(s => s.status === demand.pm_status)
+    return idx >= 0 && idx < steps.length - 1 ? steps[idx + 1] : null
   }
 
   useEffect(() => {
@@ -89,15 +86,15 @@ export function DemandView() {
         <table className="data-table"><thead><tr><th>Title</th><th>Type</th><th>Priority</th><th>Status</th><th>Product</th><th>Value Stream</th><th>Capability</th><th>Actions</th></tr></thead>
         <tbody>{filtered.map((dem: any) => {
           const cap = capabilities.find((c: any) => c.id === dem.pm_capability); const prod = products.find((p: any) => p.id === dem.pm_product); const convertedReq = dem.pm_converted_to ? requirements.find((r: any) => r.id === dem.pm_converted_to) : null; const vs = dem.pm_valuestream ? vsConfigs.find((c: any) => c.id === dem.pm_valuestream) : null; const isExp = expanded.has(dem.id)
-          const next = getNextStatus(dem)
+          const next = getNextLabel(dem)
           const isTerminal = dem.pm_status === 'Converted' || dem.pm_status === 'Rejected'
           const canReject = !isTerminal && dem.pm_status !== 'Converted' && next
           return (<Fragment key={dem.id}>
             <tr id={`row-${dem.id}`} className={`data-row${isExp ? ' project-row-expanded' : ''} project-main-row`} onClick={() => toggle(dem.id)} style={{ cursor: 'pointer' }}><td><strong>{dem.pm_title}</strong></td><td><span className="badge badge-gray">{dem.pm_type || '—'}</span></td><td><span className={`badge ${badgeClass(dem.pm_priority)}`}>{dem.pm_priority || '—'}</span></td><td><span className={`badge ${badgeClass(dem.pm_status)}`}>{dem.pm_status}</span></td><td>{prod?.pm_name || '—'}</td><td>{vs?.pm_name || '—'}</td><td>{cap?.pm_name || '—'}</td><td className="actions-cell" onClick={e => e.stopPropagation()}>
               {!isTerminal && next && (
-                next === 'Converted'
+                next.status === 'Converted'
                   ? <button className="btn-sm btn-edit" onClick={() => openConvert(dem.id)}>🔄 Convert</button>
-                  : <button className="btn-sm btn-link" onClick={() => changeStatus(dem.id, next)}>{ACTION_LABEL[next] || '→ ' + next}</button>
+                  : <button className="btn-sm btn-link" onClick={() => changeStatus(dem.id, next.status)}>{next.label || '→ ' + next.status}</button>
               )}
               {canReject && <button className="btn-sm btn-delete" onClick={() => reject(dem.id)}>❌ Reject</button>}
               <button className="btn-sm btn-edit" onClick={() => openEdit(dem.id)}>✏️ Edit</button>
