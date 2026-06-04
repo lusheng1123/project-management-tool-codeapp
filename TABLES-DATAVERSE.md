@@ -106,16 +106,15 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 ## 8. pm_epic (Epic)
 
 | Display Name | Schema Name | Type | Required | Config Source |
-|---|---|---|---|---|
+|---|---|---|---|---|---|
 | Epic ID | pm_epicid | Primary Key (GUID) | Auto | |
 | Title | pm_title | Single Line of Text (300) | Yes | |
 | Detail | pm_detail | Multiple Lines of Text (4000) | No | |
 | Project | pm_projectname | Lookup → pm_project | No | |
-| Jira Link | pm_jiralink | Single Line of Text (500) | No | |
+| Jira Link | pm_jiralink | Single Line of Text (500) | No | 🔗 Jira pending — text field for URL |
 | Effort (days) | pm_estimatedeffort | Whole Number | No | PM's estimate |
-| Release Date | pm_releasedate | Date Only | No | |
-| Release Date | pm_releasedate | Date Only | No | |
 | Start Date | pm_startdate | Date Only | No | |
+| Release Date | pm_releasedate | Date Only | No | |
 | Completed Date | pm_completeddate | Date Only | No | |
 | RAG Status | pm_ragstatus | Single Line of Text (10) | No | `pm_config` type=`rag_status` |
 
@@ -131,7 +130,9 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 | Detail | pm_detail | Multiple Lines of Text (4000) | Yes | |
 | Epic | pm_epicid | Lookup → pm_epic | No | |
 | Acceptance Criteria | pm_acceptancecriteria | Multiple Lines of Text (4000) | No | |
-| Story Points | pm_storypoint | Whole Number | No | 1pt = 1 manday |
+| Story Points | pm_storypoint | Whole Number | No | 1pt = 1 manday. Used in Sprint Board SP breakdown |
+
+> 🔗 Jira pending — `pm_jiralink` will be added once Jira integration is implemented.
 
 ---
 
@@ -261,8 +262,8 @@ All configurable values live in `pm_config`. Add/edit/remove values in the ⚙�
 | `tool` | pm_releaseitem.pm_tool | Jira, Azure DevOps, GitHub, ServiceNow, Jenkins | No |
 | `demand_type` | pm_demand.pm_type | Feature, Bug, Enhancement, Tech Debt | No |
 | `demand_status` | pm_demand.pm_status | Submitted, Triaging, Assessed, PSC Review, Approved, Rejected, Converted | **Yes** |
-| `demand_flow` | pm_demand (workflow) | Per-value-stream status progression (pm_name=VS:order, pm_description=status) | **Yes** |
-| `user_role` | pm_user.pm_role | Admin, PM, PO, Developer, Release Manager, Viewer (comma-separated for multi-role) | **Yes** |
+| `demand_flow` | pm_demand (workflow) | Defines status progression per VS (pm_name=VS:order, pm_description=status). Last step = Approved (triggers conversion) | **Yes** |
+| `user_role` | pm_user.pm_role | Value Stream Owner, Product Owner, Delivery Lead, Business Analyst, Admin, Release Manager, ITSO | **Yes** |
 
 > **Yes** = values matched in `badgeClass()` or view logic. Renaming breaks colors/behavior. Adding new values gets `badge-gray` (safe default). **No** = pure labels, freely editable.
 
@@ -366,5 +367,5 @@ Values: `G`, `A`, `R`
 | pm_release | 5 |
 | pm_releaseitem | 14 |
 | pm_assignment | 14 |
-| pm_user | 7 |
+| pm_user | 8 |
 | **Total** | **~270 records** |

@@ -208,6 +208,7 @@ Single-screen overview of everything happening in the system. Role-aware (will i
 
 ### Current State
 - `pm_epic` already has `pm_jiralink` (text field, single URL per epic)
+- `pm_userstory` — `pm_jiralink` to be added in P1
 - No sync, no automation — manual paste only
 
 ### Scope
@@ -249,8 +250,8 @@ Single-screen overview of everything happening in the system. Role-aware (will i
 
 | # | Feature | Priority | Files | Notes |
 |---|---|---|---|---|
-| E1 | UAC — User roles + tab filtering + permissions | **High** | ~10 | Roles, tab visibility, action buttons |
-| E2 | Demand Intake — New tab + workflow + convert | **High** | ~5 | ✅ **Done** — `views/DemandView.tsx`, 5-stage workflow, config-driven, convert to requirement |
+| E1 | UAC — User roles + tab filtering + permissions | **High** | ~16 | ✅ **Done** — RoleContext, org roles (VSO/PO/DL/BA/Admin/RM/ITSO), tab filtering, UsersView CRUD |
+| E2 | Demand Intake — New tab + workflow + convert | **High** | ~5 | ✅ **Done** — configurable flow per value stream, Approve triggers conversion, Change Status dropdown |
 | E3 | `pm_pscapprovalrequired` dropdown from `yes_no` config | Low | 1 | Replace text input with Yes/No select |
 | E4 | Effort Summary tab — Product/Project/Epic/Story rollup | Medium | ~3 | Calculated totals across hierarchy |
 | E5 | Resource capacity warnings — Allocation % > 100% | Low | 1 | Red highlight in Resources tab |
@@ -259,6 +260,7 @@ Single-screen overview of everything happening in the system. Role-aware (will i
 | E8 | Export to CSV per tab | Low | 1 | Download button in each view header |
 | E9 | Dark mode toggle in header | Low | 1 | CSS variables swap |
 | E10 | Notification badge for pending signoffs | Low | 2 | Count badge on Releases tab |
+| E11 | Sprint Board — Product×Team grid, SP tracking | **High** | ~3 | ✅ **Done** — `views/SprintView.tsx`, matrix layout, completed/total SP, progress bar |
 
 ---
 
@@ -267,8 +269,9 @@ Single-screen overview of everything happening in the system. Role-aware (will i
 | # | Issue | Status |
 |---|---|---|
 | B1 | `App.tsx.bak-split` backup file in `src/` — remove after confirming split works | Open |
-| B2 | Seed data total count in TABLES-DATAVERSE.md — verify 62 (56 config + 6 user_roles = 62?) | Open |
+| B2 | Seed data total count in TABLES-DATAVERSE.md — verify | ✅ Done — 89 entries, 20 types |
 | B3 | `.bak-*` backup files in `src/` — already removed | Done |
+| B4 | Jira fields on pm_epic (pm_jiralink) + pm_userstory — update once Jira integration is implemented | Pending 🔗 |
 
 ---
 
@@ -276,7 +279,7 @@ Single-screen overview of everything happening in the system. Role-aware (will i
 
 | Category | Count |
 |---|---|
-| Features (major) | 1 |
-| Enhancements | 10 |
-| Bugs / Cleanup | 3 |
-| **Total Backlog Items** | **14** |
+| Features (major) | 0 |
+| Enhancements | 8 + 1 done |
+| Bugs / Cleanup | 4 |
+| **Total Backlog Items** | **13** |
