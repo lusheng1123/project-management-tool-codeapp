@@ -2,11 +2,12 @@ import { createContext, useContext, useState } from 'react'
 
 const TABS_BY_ROLE: Record<string, string[]> = {
   Admin: ['dashboard','demand','capabilities','products','projects','requirements','epics','stories','risks','dependencies','releases','resources','config','copilot'],
-  PM: ['dashboard','demand','capabilities','products','projects','requirements','epics','stories','risks','dependencies','releases','resources'],
-  PO: ['dashboard','demand','products','requirements','epics','stories'],
-  Developer: ['dashboard','epics','stories','requirements','projects','releases'],
+  'Value Stream Owner': ['dashboard','demand','products','capabilities','requirements','epics','stories','risks','dependencies'],
+  'Product Owner': ['dashboard','demand','products','requirements','epics','stories'],
+  'Delivery Lead': ['dashboard','demand','projects','epics','stories','requirements','releases','resources','risks','dependencies'],
+  'Business Analyst': ['dashboard','demand','requirements','products','capabilities'],
   'Release Manager': ['dashboard','releases','epics','stories','requirements'],
-  Viewer: ['dashboard','demand','capabilities','products','projects','requirements','epics','stories','risks','dependencies','releases','resources','config','copilot']
+  ITSO: ['dashboard','demand','risks','dependencies','requirements']
 }
 
 export function getAllowedTabs(roles: string[]): string[] {
@@ -35,7 +36,7 @@ const RoleContext = createContext<{
 export function RoleProvider({ children }: { children: React.ReactNode }) {
   const [roleName, setRoleName] = useState(() => localStorage.getItem('pm_current_role') || 'Admin')
   const roles = roleName.split(',').map(s => s.trim()).filter(Boolean)
-  if (roles.length === 0) roles.push('Viewer')
+  if (roles.length === 0) roles.push('Admin')
 
   const setRole = (r: string) => {
     setRoleName(r)

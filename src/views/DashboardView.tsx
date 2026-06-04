@@ -18,15 +18,17 @@ export function DashboardView() {
   const vsConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'value_stream' }), [key])
 
   const pendingDemands = demands.filter((d: any) => {
-    if (d.pm_status === 'Converted' || d.pm_status === 'Rejected') return false
+    if (d.pm_status === 'Rejected' || (d.pm_status === 'Approved' && d.pm_converted_to)) return false
     if (hasRole('Admin')) return true
-    if (hasRole('PM')) return ['Submitted','Triaging','Approved'].includes(d.pm_status)
-    if (hasRole('PO')) return d.pm_status === 'Assessed'
+    if (hasRole('Delivery Lead')) return ['Submitted','Triaging','Approved'].includes(d.pm_status)
+    if (hasRole('Value Stream Owner') || hasRole('Product Owner')) return d.pm_status === 'Assessed'
+    if (hasRole('Business Analyst')) return d.pm_status === 'Submitted'
+    if (hasRole('ITSO')) return ['Assessed','PSC Review'].includes(d.pm_status)
     return false
   })
   const pendingSignoffs = releaseItems.filter((ri: any) => {
     if (ri.pm_signoff_status !== 'Pending') return false
-    if (hasRole('Admin') || hasRole('PO') || hasRole('Release Manager') || hasRole('PM')) return true
+    if (hasRole('Admin') || hasRole('Product Owner') || hasRole('Value Stream Owner') || hasRole('Release Manager') || hasRole('Delivery Lead')) return true
     return false
   })
   const activeReleases = releases.filter((r: any) => ['Open', 'In Review'].includes(r.pm_status))
