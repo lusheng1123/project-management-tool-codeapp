@@ -19,14 +19,23 @@ export function ReleasesView() {
 
   useEffect(() => {
     if (!focusId) return
-    setExpanded(prev => new Set([...prev, focusId]))
+    const ri = DS.getById('pm_releaseitem', focusId)
+    if (ri) {
+      // Signoff item: expand release + epic, scroll to story row
+      setExpanded(prev => new Set([...prev, ri.pm_release]))
+      const story = DS.getById('pm_userstory', ri.pm_userstory)
+      if (story?.pm_epicid) setExpandedEpics(prev => new Set([...prev, story.pm_epicid]))
+    } else {
+      // Release click: expand release
+      setExpanded(prev => new Set([...prev, focusId]))
+    }
     setTimeout(() => {
       const el = document.getElementById(`row-${focusId}`)
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       el?.classList.add('row-focus-flash')
       setTimeout(() => el?.classList.remove('row-focus-flash'), 2000)
       clearFocus()
-    }, 120)
+    }, 150)
   }, [focusId])
   const filtered = term ? data.filter((r: any) => Object.values(r).some(v => String(v ?? '').toLowerCase().includes(term.toLowerCase()))) : data
 
@@ -84,12 +93,12 @@ export function ReleasesView() {
                       <td colSpan={6}><div className="project-epic-item"><span style={{ fontWeight: 600, color: 'var(--primary)' }}>⚡ {epic?.pm_title || '—'}</span><span className="project-epic-meta">{group.length} stories · {signedCount}/{group.length} signed off</span>{epic?.pm_ragstatus && <span className={`badge ${badgeClass(epic.pm_ragstatus)}`}>{epic.pm_ragstatus}</span>}<span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{isEpicExp ? '▲' : '▼'}</span></div></td>
                     </tr>
                     {isEpicExp && group.map((g: any) => (
-                      <tr key={g.id} className="project-epic-row"><td colSpan={6}><div className="project-epic-item" style={{ paddingLeft: '30px' }}><span className={`badge ${badgeClass(g.pm_signoff_status)}`}>{g.pm_signoff_status}</span><span className="project-epic-name" style={{ fontSize: '0.85rem' }}>{g.story?.pm_detail?.substring(0, 60) || '—'}</span><span className="project-epic-meta" style={{ fontSize: '0.78rem' }}>By: {g.pm_registered_by || '—'}{g.pm_tool ? ` | ${g.pm_tool}` : ''}{g.pm_signoff_by ? ` | Signoff: ${g.pm_signoff_by}` : ''}</span>{g.pm_signoff_status === 'Pending' && <button className="btn-sm btn-edit" onClick={(e) => { e.stopPropagation(); showSignoffModal(g.id) }}>✍️ Signoff</button>}</div></td></tr>
+                      <tr id={`row-${g.id}`} key={g.id} className="project-epic-row"><td colSpan={6}><div className="project-epic-item" style={{ paddingLeft: '30px' }}><span className={`badge ${badgeClass(g.pm_signoff_status)}`}>{g.pm_signoff_status}</span><span className="project-epic-name" style={{ fontSize: '0.85rem' }}>{g.story?.pm_detail?.substring(0, 60) || '—'}</span><span className="project-epic-meta" style={{ fontSize: '0.78rem' }}>By: {g.pm_registered_by || '—'}{g.pm_tool ? ` | ${g.pm_tool}` : ''}{g.pm_signoff_by ? ` | Signoff: ${g.pm_signoff_by}` : ''}</span>{g.pm_signoff_status === 'Pending' && <button className="btn-sm btn-edit" onClick={(e) => { e.stopPropagation(); showSignoffModal(g.id) }}>✍️ Signoff</button>}</div></td></tr>
                     ))}
                   </Fragment>)
                 })}
                 {unlinked.map((g: any) => (
-                  <tr key={g.id} className="project-epic-row"><td colSpan={6}><div className="project-epic-item"><span className={`badge ${badgeClass(g.pm_signoff_status)}`}>{g.pm_signoff_status}</span><span className="project-epic-name" style={{ fontSize: '0.85rem' }}>{g.story?.pm_detail?.substring(0, 60) || '—'}</span><span className="project-epic-meta" style={{ fontSize: '0.78rem' }}>By: {g.pm_registered_by || '—'}{g.pm_tool ? ` | ${g.pm_tool}` : ''}</span>{g.pm_signoff_status === 'Pending' && <button className="btn-sm btn-edit" onClick={(e) => { e.stopPropagation(); showSignoffModal(g.id) }}>✍️ Signoff</button>}</div></td></tr>
+                  <tr id={`row-${g.id}`} key={g.id} className="project-epic-row"><td colSpan={6}><div className="project-epic-item"><span className={`badge ${badgeClass(g.pm_signoff_status)}`}>{g.pm_signoff_status}</span><span className="project-epic-name" style={{ fontSize: '0.85rem' }}>{g.story?.pm_detail?.substring(0, 60) || '—'}</span><span className="project-epic-meta" style={{ fontSize: '0.78rem' }}>By: {g.pm_registered_by || '—'}{g.pm_tool ? ` | ${g.pm_tool}` : ''}</span>{g.pm_signoff_status === 'Pending' && <button className="btn-sm btn-edit" onClick={(e) => { e.stopPropagation(); showSignoffModal(g.id) }}>✍️ Signoff</button>}</div></td></tr>
                 ))}
               </>)
             })()}

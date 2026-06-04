@@ -85,7 +85,7 @@ export function DashboardView() {
             {pendingSignoffs.map((ri: any) => {
               const rel = releases.find((r: any) => r.id === ri.pm_release)
               return (
-                <div key={ri.id} onClick={() => navigate('releases', ri.pm_release)} style={{
+                <div key={ri.id} onClick={() => navigate('releases', ri.id)} style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   padding: '10px 12px', marginBottom: '8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
                   background: 'var(--amber-bg)', border: '1px solid var(--amber)', fontSize: '0.85rem',
