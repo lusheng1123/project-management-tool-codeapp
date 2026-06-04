@@ -88,8 +88,8 @@ export function DemandView() {
           return (<Fragment key={dem.id}>
             <tr id={`row-${dem.id}`} className={`data-row${isExp ? ' project-row-expanded' : ''} project-main-row`} onClick={() => toggle(dem.id)} style={{ cursor: 'pointer' }}><td><strong>{dem.pm_title}</strong></td><td><span className="badge badge-gray">{dem.pm_type || '—'}</span></td><td><span className={`badge ${badgeClass(dem.pm_priority)}`}>{dem.pm_priority || '—'}</span></td><td><span className={`badge ${badgeClass(dem.pm_status)}`}>{dem.pm_status}</span></td><td>{prod?.pm_name || '—'}</td><td>{vs?.pm_name || '—'}</td><td>{cap?.pm_name || '—'}</td><td className="actions-cell" onClick={e => e.stopPropagation()}>
               {showDropdown && (
-                <select style={{ padding: '4px 8px', fontSize: '0.78rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface)', cursor: 'pointer', color: 'var(--primary)', fontWeight: 500 }} value="" onChange={(e) => { const val = e.target.value; if (!val) return; if (val === 'Converted') openConvert(dem.id); else if (val === 'Rejected') reject(dem.id); else changeStatus(dem.id, val) }}>
-                  <option value="">Change Status ▾</option>
+                <select style={{ padding: '6px 28px 6px 12px', fontSize: '0.82rem', borderRadius: 'var(--radius-sm)', border: '2px solid var(--primary)', background: 'var(--primary-bg)', cursor: 'pointer', color: 'var(--primary-dark)', fontWeight: 600, appearance: 'auto' }} value="" onChange={(e) => { const val = e.target.value; if (!val) return; if (val === 'Converted') openConvert(dem.id); else if (val === 'Rejected') reject(dem.id); else changeStatus(dem.id, val) }}>
+                  <option value="">▶ Change Status</option>
                   {available.map((s: string) => <option key={s} value={s}>{s}</option>)}
                   <option value="Rejected" style={{ color: 'var(--red)' }}>Rejected</option>
                 </select>
