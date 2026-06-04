@@ -32,18 +32,15 @@ export function DemandView() {
     return flowConfigs
       .filter((c: any) => c.pm_name.startsWith(vsName + ':'))
       .sort((a: any, b: any) => parseInt(a.pm_name.split(':').pop()) - parseInt(b.pm_name.split(':').pop()))
-      .map((c: any) => c.pm_description.split('|')[0])
+      .map((c: any) => c.pm_description)
   }
 
   const getNextLabel = (demand: any): { status: string; label: string } | null => {
-    const vsName = getVSName(demand.pm_valuestream)
-    if (!vsName) return null
-    const steps = flowConfigs
-      .filter((c: any) => c.pm_name.startsWith(vsName + ':'))
-      .sort((a: any, b: any) => parseInt(a.pm_name.split(':').pop()) - parseInt(b.pm_name.split(':').pop()))
-      .map((c: any) => { const [status, label] = c.pm_description.split('|'); return { status, label: label || '' } })
-    const idx = steps.findIndex(s => s.status === demand.pm_status)
-    return idx >= 0 && idx < steps.length - 1 ? steps[idx + 1] : null
+    const flow = getFlowStatuses(demand.pm_valuestream)
+    const idx = flow.indexOf(demand.pm_status)
+    if (idx < 0 || idx >= flow.length - 1) return null
+    const status = flow[idx + 1]
+    return { status, label: status }
   }
 
   useEffect(() => {
