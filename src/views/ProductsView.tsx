@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, Fragment } from 'react'
 import { DS } from '../data'
 import { getFields } from '../models'
 import { useUI, badgeClass } from '../context/UIContext'
+import { useNavigation } from '../context/NavigationContext'
 import { useSearch } from '../context/SearchContext'
 import { StatsCards } from '../components/StatsCards'
 import { SearchBar } from '../components/SearchBar'
@@ -9,8 +10,22 @@ import { EmptyState } from '../components/EmptyState'
 
 export function ProductsView() {
   const [data, setData] = useState<any[]>([]); const [expanded, setExpanded] = useState<Set<string>>(new Set()); const [key, setKey] = useState(0); const reload = () => setKey(k => k + 1); const { showToast, showModal } = useUI()
+  const { focusId, clearFocus } = useNavigation()
   useEffect(() => { setData(DS.getAll('pm_product')) }, [key]); const { term } = useSearch()
   const projects = useMemo(() => DS.getAll('pm_project'), [key])
+
+  useEffect(() => {
+    if (!focusId) return
+    setExpanded(prev => new Set([...prev, focusId]))
+    setTimeout(() => {
+      const el = document.getElementById(`row-${focusId}`)
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el?.classList.add('row-focus-flash')
+      setTimeout(() => el?.classList.remove('row-focus-flash'), 2000)
+      clearFocus()
+    }, 120)
+  }, [focusId])
+
   const toggle = (id: string) => { setExpanded(prev => { const s = new Set(prev); if (s.has(id)) s.delete(id); else s.add(id); return s }) }
   const showProductDetailModal = (prodId: string) => { const product = DS.getById('pm_product', prodId); if (!product) return; const caps = DS.getCapabilitiesByProduct(prodId); const totalCost = caps.reduce((sum: number, c: any) => sum + (Number(c.pm_cost) || 0), 0); const pp = projects.filter((p: any) => p.pm_productname === prodId); const vsName = DS.getLookupName('pm_config', product.pm_valuestream); showModal({ title: `📦 Product: ${product.pm_name}`, fields: [], extraContent: (<div className="detail-section"><p><strong>Journey:</strong> {product.pm_journeyname || '—'} | <strong>Short:</strong> {product.pm_shortname || '—'}</p><p><strong>Governance:</strong> <span className={`badge ${badgeClass(product.pm_governancestatus)}`}>{product.pm_governancestatus || 'N/A'}</span></p><p><strong>Value Stream:</strong> {vsName}</p><p><strong>Contact:</strong> {product.pm_contact || '—'}</p><p><strong>Projects:</strong> {pp.length}</p><h4>🎯 Linked Capabilities ({caps.length}){caps.length > 0 && <> — Total Cost: ${totalCost.toLocaleString()}</>}</h4>{caps.length === 0 ? <p>No capabilities linked</p> : (<table className="data-table"><thead><tr><th>Capability</th><th>Type</th><th>Description</th><th>Cost</th></tr></thead><tbody>{caps.map((c: any) => (<tr key={c.id}><td><strong>{c.pm_name}</strong></td><td>{DS.getLookupName('pm_config', c.pm_capabilitytype)}</td><td><small>{c.pm_description || '—'}</small></td><td>${(Number(c.pm_cost) || 0).toLocaleString()}</td></tr>))}</tbody></table>)}</div>), onSave: () => {} }) }
   const openProdModal = (id: string) => { const rec = DS.getById('pm_product', id); const vsConfigs = DS.query('pm_config', { pm_type: 'value_stream' }); const gsConfigs = DS.query('pm_config', { pm_type: 'governance_status' }); showModal({ title: 'Edit Product', fields: getFields('pm_product').filter(f => f.name !== 'pm_valuestream' && f.name !== 'pm_governancestatus'), data: rec, extraContent: (<div><label>Value Stream</label><select id="prodVS" data-extra defaultValue={rec.pm_valuestream || ''}><option value="">None</option>{vsConfigs.map((v: any) => <option key={v.id} value={v.id}>{v.pm_name}</option>)}</select><label>Governance Status</label><select id="prodGS" data-extra defaultValue={rec.pm_governancestatus || ''}><option value="">None</option>{gsConfigs.map((g: any) => <option key={g.id} value={g.pm_name}>{g.pm_name}</option>)}</select></div>), onSave: (fd) => { fd.pm_valuestream = (document.getElementById('prodVS') as HTMLSelectElement)?.value || ''; fd.pm_governancestatus = (document.getElementById('prodGS') as HTMLSelectElement)?.value || ''; DS.update('pm_product', id, fd); reload(); showToast('Product updated!') }, onDelete: () => { DS.delete('pm_product', id); reload(); showToast('Product deleted!') } }) }
@@ -25,7 +40,7 @@ export function ProductsView() {
         <tbody>{filtered.map((prod: any) => {
           const caps = DS.getCapabilitiesByProduct(prod.id); const pp = projects.filter((p: any) => p.pm_productname === prod.id); const isExp = expanded.has(prod.id)
           return (<Fragment key={prod.id}>
-            <tr className={`data-row${isExp ? ' project-row-expanded' : ''} project-main-row`} onClick={() => toggle(prod.id)} style={{ cursor: 'pointer' }}><td><strong>{prod.pm_name}</strong><br /><small>{prod.pm_journeyname || ''} ({prod.pm_shortname || ''})</small></td><td>{caps.map((c: any) => c.pm_name).join(', ') || 'None'}</td><td><span className={`badge ${badgeClass(prod.pm_governancestatus)}`}>{prod.pm_governancestatus || 'N/A'}</span></td><td>{DS.getLookupName('pm_config', prod.pm_valuestream)}</td><td>{pp.length} proj{pp.length !== 1 ? 's' : ''}</td><td className="actions-cell" onClick={e => e.stopPropagation()}><button className="btn-sm btn-edit" onClick={() => openProdModal(prod.id)}>✏️ Edit</button><button className="btn-sm btn-link" onClick={() => showProductDetailModal(prod.id)}>🔍 View</button><button className="btn-sm btn-delete" onClick={() => { if (confirm('Delete this product?')) { DS.delete('pm_product', prod.id); reload(); showToast('Product deleted!') } }}>🗑️</button></td></tr>
+            <tr id={`row-${prod.id}`} className={`data-row${isExp ? ' project-row-expanded' : ''} project-main-row`} onClick={() => toggle(prod.id)} style={{ cursor: 'pointer' }}><td><strong>{prod.pm_name}</strong><br /><small>{prod.pm_journeyname || ''} ({prod.pm_shortname || ''})</small></td><td>{caps.map((c: any) => c.pm_name).join(', ') || 'None'}</td><td><span className={`badge ${badgeClass(prod.pm_governancestatus)}`}>{prod.pm_governancestatus || 'N/A'}</span></td><td>{DS.getLookupName('pm_config', prod.pm_valuestream)}</td><td>{pp.length} proj{pp.length !== 1 ? 's' : ''}</td><td className="actions-cell" onClick={e => e.stopPropagation()}><button className="btn-sm btn-edit" onClick={() => openProdModal(prod.id)}>✏️ Edit</button><button className="btn-sm btn-link" onClick={() => showProductDetailModal(prod.id)}>🔍 View</button><button className="btn-sm btn-delete" onClick={() => { if (confirm('Delete this product?')) { DS.delete('pm_product', prod.id); reload(); showToast('Product deleted!') } }}>🗑️</button></td></tr>
             {isExp && pp.map((p: any) => (<tr key={p.id} className="project-epic-row"><td colSpan={6}><div className="project-epic-item"><span className={`badge ${badgeClass(p.pm_status)}`}>{p.pm_status}</span><span className="project-epic-name">{p.pm_name}</span><span className="project-epic-meta">{p.pm_overallcompletion || 0}% done | Priority: {p.pm_priority || '—'}</span><span className="project-epic-devs">{p.pm_startdate || '?'} → {p.pm_targetdeliverydate || '?'}</span></div></td></tr>))}
             {isExp && pp.length === 0 && <tr className="project-epic-row"><td colSpan={6} style={{ padding: '10px 14px 10px 44px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>No projects linked</td></tr>}
           </Fragment>)

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { DS } from '../data'
 import { getFields } from '../models'
 import { useUI } from '../context/UIContext'
+import { useNavigation } from '../context/NavigationContext'
 import { useSearch } from '../context/SearchContext'
 import { StatsCards } from '../components/StatsCards'
 import { SearchBar } from '../components/SearchBar'
@@ -9,10 +10,23 @@ import { EmptyState } from '../components/EmptyState'
 
 export function DependenciesView() {
   const [data, setData] = useState<any[]>([]); const [key, setKey] = useState(0); const reload = () => setKey(k => k + 1); const { showToast, showModal } = useUI()
+  const { focusId, clearFocus } = useNavigation()
   useEffect(() => { setData(DS.getAll('pm_dependency')) }, [key])
   const products = useMemo(() => DS.getAll('pm_product'), [key]); const projects = useMemo(() => DS.getAll('pm_project'), [key]); const requirements = useMemo(() => DS.getAll('pm_requirement'), [key])
   const getReqsForProduct = (prodId: string) => prodId ? requirements.filter((r: any) => { const p = projects.find((pj: any) => pj.id === r.pm_projectname); return p && p.pm_productname === prodId }) : []
   const { term } = useSearch()
+
+  useEffect(() => {
+    if (!focusId) return
+    setTimeout(() => {
+      const el = document.getElementById(`row-${focusId}`)
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el?.classList.add('row-focus-flash')
+      setTimeout(() => el?.classList.remove('row-focus-flash'), 2000)
+      clearFocus()
+    }, 120)
+  }, [focusId])
+
   const filtered = term ? data.filter((d: any) => Object.values(d).some(v => String(v ?? '').toLowerCase().includes(term.toLowerCase()))) : data
 
   const openEdit = (id: string) => {
@@ -28,7 +42,7 @@ export function DependenciesView() {
       <SearchBar />
       {!filtered.length ? <EmptyState msg="No dependencies found" /> : (
         <table className="data-table"><thead><tr><th>Summary</th><th>Detail</th><th>Product</th><th>Requirement</th><th>Actions</th></tr></thead>
-        <tbody>{filtered.map((dep: any) => { const prod = products.find((p: any) => p.id === dep.pm_productname); const req = dep.pm_requirementid ? requirements.find((r: any) => r.id === dep.pm_requirementid) : null; return (<tr key={dep.id} className="data-row"><td><strong>{dep.pm_summary}</strong></td><td>{dep.pm_detail?.substring(0, 100)}</td><td>{prod?.pm_name || '—'}</td><td>{req?.pm_detail?.substring(0, 60) || '—'}</td><td className="actions-cell"><button className="btn-sm btn-edit" onClick={() => openEdit(dep.id)}>✏️ Edit</button><button className="btn-sm btn-delete" onClick={() => { if (confirm('Delete this dependency?')) { DS.delete('pm_dependency', dep.id); reload(); showToast('Dependency deleted!') } }}>🗑️</button></td></tr>) })}</tbody></table>
+        <tbody>{filtered.map((dep: any) => { const prod = products.find((p: any) => p.id === dep.pm_productname); const req = dep.pm_requirementid ? requirements.find((r: any) => r.id === dep.pm_requirementid) : null; return (            <tr id={`row-${dep.id}`} key={dep.id} className="data-row"><td><strong>{dep.pm_summary}</strong></td><td>{dep.pm_detail?.substring(0, 100)}</td><td>{prod?.pm_name || '—'}</td><td>{req?.pm_detail?.substring(0, 60) || '—'}</td><td className="actions-cell"><button className="btn-sm btn-edit" onClick={() => openEdit(dep.id)}>✏️ Edit</button><button className="btn-sm btn-delete" onClick={() => { if (confirm('Delete this dependency?')) { DS.delete('pm_dependency', dep.id); reload(); showToast('Dependency deleted!') } }}>🗑️</button></td></tr>) })}</tbody></table>
       )}
     </div>
   )

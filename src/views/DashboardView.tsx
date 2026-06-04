@@ -57,12 +57,12 @@ export function DashboardView() {
             {pendingDemands.map((dem: any) => {
               const prod = getProduct(dem.pm_product)
               return (
-                <div key={dem.id} onClick={() => navigate('demand')} style={{
+                <div key={dem.id} onClick={() => navigate('demand', dem.id)} style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   padding: '10px 12px', marginBottom: '8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
                   background: 'var(--border-light)', border: '1px solid var(--border)', fontSize: '0.85rem',
                   transition: 'background 0.15s'
-                }} onMouseEnter={e => (e.currentTarget.style.background = 'var(--primary-bg)')} onMouseLeave={e => (e.currentTarget.style.background = 'var(--border-light)')}>
+                }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {dem.pm_title}
@@ -85,12 +85,12 @@ export function DashboardView() {
             {pendingSignoffs.map((ri: any) => {
               const rel = releases.find((r: any) => r.id === ri.pm_release)
               return (
-                <div key={ri.id} onClick={() => navigate('releases')} style={{
+                <div key={ri.id} onClick={() => navigate('releases', ri.pm_release)} style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   padding: '10px 12px', marginBottom: '8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
                   background: 'var(--amber-bg)', border: '1px solid var(--amber)', fontSize: '0.85rem',
                   transition: 'background 0.15s'
-                }} onMouseEnter={e => (e.currentTarget.style.background = '#fef3c7')} onMouseLeave={e => (e.currentTarget.style.background = 'var(--amber-bg)')}>
+                }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {rel?.pm_releasename || 'Unknown Release'}
@@ -130,11 +130,9 @@ export function DashboardView() {
                 </thead>
                 <tbody>
                   {productSummary.map((s: any) => (
-                    <tr key={s.product.id} style={{ borderBottom: '1px solid var(--border-light)', cursor: 'pointer' }}
-                      onClick={() => navigate('products')}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--primary-bg)')}
-                      onMouseLeave={e => (e.currentTarget.style.background = '')}>
-                      <td style={{ padding: '8px', fontWeight: 500 }}>{s.product.pm_name}</td>
+                      <tr key={s.product.id} style={{ borderBottom: '1px solid var(--border-light)', cursor: 'pointer' }}
+                        onClick={() => navigate('products', s.product.id)}>
+                        <td style={{ padding: '8px', fontWeight: 500 }}>{s.product.pm_name}</td>
                       <td style={{ padding: '8px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.75rem' }}>{s.vs || '—'}</td>
                       <td style={{ padding: '8px', textAlign: 'center' }} onClick={(e) => { e.stopPropagation(); navigate('demand') }}><span className={`badge ${s.demandCount > 0 ? 'badge-green' : 'badge-gray'}`}>{s.demandCount}</span></td>
                       <td style={{ padding: '8px', textAlign: 'center' }} onClick={(e) => { e.stopPropagation(); navigate('risks') }}><span className={`badge ${s.riskCount > 0 ? 'badge-amber' : 'badge-gray'}`}>{s.riskCount}</span></td>
@@ -166,9 +164,7 @@ export function DashboardView() {
                     const signed = items.filter((ri: any) => ri.pm_signoff_status === 'Approved').length
                     return (
                       <tr key={rel.id} style={{ borderBottom: '1px solid var(--border-light)', cursor: 'pointer' }}
-                        onClick={() => navigate('releases')}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--primary-bg)')}
-                        onMouseLeave={e => (e.currentTarget.style.background = '')}>
+                        onClick={() => navigate('releases', rel.id)}>
                         <td style={{ padding: '8px', fontWeight: 500 }}>{rel.pm_releasename}</td>
                         <td style={{ padding: '8px', textAlign: 'center' }}><span className={`badge ${badgeClass(rel.pm_status)}`}>{rel.pm_status}</span></td>
                         <td style={{ padding: '8px', textAlign: 'center' }}>{items.length}</td>

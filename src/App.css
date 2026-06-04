@@ -221,6 +221,15 @@ body {
 .data-table tbody tr:hover { background: #f8fafc; }
 .data-table tbody tr:last-child td { border-bottom: none; }
 
+/* ═══════ ROW FOCUS FLASH ═══════ */
+.row-focus-flash {
+  animation: rowFlash 2s ease-out;
+}
+@keyframes rowFlash {
+  0% { background: #e0e7ff !important; }
+  100% { background: transparent !important; }
+}
+
 .actions-cell {
   white-space: nowrap;
   display: flex;

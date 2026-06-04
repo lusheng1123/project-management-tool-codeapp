@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, Fragment } from 'react'
 import { DS } from '../data'
 import { getFields } from '../models'
 import { useUI, badgeClass } from '../context/UIContext'
+import { useNavigation } from '../context/NavigationContext'
 import { useSearch } from '../context/SearchContext'
 import { StatsCards } from '../components/StatsCards'
 import { SearchBar } from '../components/SearchBar'
@@ -9,11 +10,24 @@ import { EmptyState } from '../components/EmptyState'
 
 export function ReleasesView() {
   const [data, setData] = useState<any[]>([]); const [expanded, setExpanded] = useState<Set<string>>(new Set()); const [expandedEpics, setExpandedEpics] = useState<Set<string>>(new Set()); const [key, setKey] = useState(0); const reload = () => setKey(k => k + 1); const { showToast, showModal } = useUI()
+  const { focusId, clearFocus } = useNavigation()
   useEffect(() => { setData(DS.getAll('pm_release')) }, [key])
   const items = useMemo(() => DS.getAll('pm_releaseitem'), [key]); const stories = useMemo(() => DS.getAll('pm_userstory'), [key]); const epics = useMemo(() => DS.getAll('pm_epic'), [key])
   const toggle = (id: string) => { setExpanded(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s }) }
   const toggleEpic = (id: string) => { setExpandedEpics(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s }) }
   const { term } = useSearch()
+
+  useEffect(() => {
+    if (!focusId) return
+    setExpanded(prev => new Set([...prev, focusId]))
+    setTimeout(() => {
+      const el = document.getElementById(`row-${focusId}`)
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el?.classList.add('row-focus-flash')
+      setTimeout(() => el?.classList.remove('row-focus-flash'), 2000)
+      clearFocus()
+    }, 120)
+  }, [focusId])
   const filtered = term ? data.filter((r: any) => Object.values(r).some(v => String(v ?? '').toLowerCase().includes(term.toLowerCase()))) : data
 
   const changeReleaseStatus = (id: string, newStatus: string) => { DS.update('pm_release', id, { pm_status: newStatus }); reload(); showToast(`Release ${newStatus}!`) }
@@ -50,7 +64,7 @@ export function ReleasesView() {
           const approved = ri.filter((i: any) => i.pm_signoff_status === 'Approved').length
           const isExp = expanded.has(rel.id)
           return (<Fragment key={rel.id}>
-            <tr className={`data-row${isExp ? ' project-row-expanded' : ''} project-main-row`} onClick={() => toggle(rel.id)} style={{ cursor: 'pointer' }}><td><strong>{rel.pm_releasename}</strong><br /><small>{rel.pm_description?.substring(0, 60)}</small></td><td><span className={`badge ${badgeClass(rel.pm_status)}`}>{rel.pm_status}</span></td><td>{rel.pm_releasedate || '—'}</td><td>{rel.pm_cutoffdate || '—'}</td><td>{ri.length} items ({approved} approved)</td><td className="actions-cell" onClick={e => e.stopPropagation()}>
+            <tr id={`row-${rel.id}`} className={`data-row${isExp ? ' project-row-expanded' : ''} project-main-row`} onClick={() => toggle(rel.id)} style={{ cursor: 'pointer' }}><td><strong>{rel.pm_releasename}</strong><br /><small>{rel.pm_description?.substring(0, 60)}</small></td><td><span className={`badge ${badgeClass(rel.pm_status)}`}>{rel.pm_status}</span></td><td>{rel.pm_releasedate || '—'}</td><td>{rel.pm_cutoffdate || '—'}</td><td>{ri.length} items ({approved} approved)</td><td className="actions-cell" onClick={e => e.stopPropagation()}>
               {rel.pm_status === 'Draft' && <button className="btn-sm btn-link" onClick={() => openRelease(rel.id)}>🔓 Open</button>}
               {rel.pm_status === 'Open' && <><button className="btn-sm btn-link" onClick={() => registerStory(rel.id)}>➕ Register</button><button className="btn-sm btn-link" onClick={() => reviewRelease(rel.id)}>🔍 Review</button></>}
               {rel.pm_status === 'In Review' && <button className="btn-sm btn-edit" onClick={() => completeRelease(rel.id)}>✅ Complete</button>}
