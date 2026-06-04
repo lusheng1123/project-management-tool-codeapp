@@ -24,7 +24,7 @@ function SprintCard({ rel, navigate }: { rel: any; navigate: (t: string, id?: st
       <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
         {rel.pm_releasedate && <div>📅 {rel.pm_releasedate}</div>}
         <div style={{ marginTop: '2px' }}>
-          {rel.storyCount} stories · {rel.signed} signed
+          {rel.storyCount} stories · {rel.signed} signed · {rel.totalSP} SP
           {rel.pending > 0 && <span style={{ color: 'var(--amber)' }}> · {rel.pending} pending</span>}
         </div>
       </div>
@@ -81,7 +81,11 @@ export function SprintView() {
       const entry = {
         ...rel, storyCount: ri.length,
         signed: ri.filter((i: any) => i.pm_signoff_status === 'Approved').length,
-        pending: ri.filter((i: any) => i.pm_signoff_status === 'Pending').length
+        pending: ri.filter((i: any) => i.pm_signoff_status === 'Pending').length,
+        totalSP: ri.reduce((sum: number, i: any) => {
+          const s = stories.find((st: any) => st.id === i.pm_userstory)
+          return sum + (s?.pm_storypoint || 0)
+        }, 0)
       }
 
       // Get teams for this release
