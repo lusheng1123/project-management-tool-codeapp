@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { DS } from '../data'
 import { badgeClass } from '../context/UIContext'
 import { useNavigation } from '../context/NavigationContext'
+import { useRole } from '../context/RoleContext'
 import { StatsCards } from '../components/StatsCards'
 
 function SprintCard({ rel, navigate }: { rel: any; navigate: (t: string, id?: string) => void }) {
@@ -40,6 +41,7 @@ function SprintCard({ rel, navigate }: { rel: any; navigate: (t: string, id?: st
 export function SprintView() {
   const [key] = useState(0)
   const { navigate } = useNavigation()
+  const { roles, hasRole } = useRole()
   const releases = useMemo(() => DS.getAll('pm_release'), [key])
   const items = useMemo(() => DS.getAll('pm_releaseitem'), [key])
   const stories = useMemo(() => DS.getAll('pm_userstory'), [key])
@@ -48,6 +50,22 @@ export function SprintView() {
   const products = useMemo(() => DS.getAll('pm_product'), [key])
   const assignments = useMemo(() => DS.getAll('pm_assignment'), [key])
   const resources = useMemo(() => DS.getAll('pm_resource'), [key])
+
+  // VSO filtering: only show products in assigned value streams
+  const vsoVSIds = useMemo(() => {
+    if (!hasRole('Value Stream Owner')) return null
+    if (hasRole('Admin')) return null
+    const vsoUser = DS.getAll('pm_user').find((u: any) => u.pm_role === 'Value Stream Owner' && u.pm_valuestream)
+    if (!vsoUser?.pm_valuestream) return new Set<string>()
+    return new Set(vsoUser.pm_valuestream.split(',').map((s: string) => s.trim()).filter(Boolean))
+  }, [roles])
+
+  const vsoProductIds = useMemo(() => {
+    if (!vsoVSIds) return null
+    return new Set(products.filter((p: any) => vsoVSIds.has(p.pm_valuestream)).map((p: any) => p.id))
+  }, [vsoVSIds, products])
+
+  const isVisibleProduct = (pid: string) => !vsoProductIds || vsoProductIds.has(pid)
 
   const getTeamForEpic = (epicId: string): Set<string> => {
     const teams = new Set<string>()
@@ -124,7 +142,7 @@ export function SprintView() {
     products.forEach((p: any) => productSet.add(p.id))
     resources.forEach((r: any) => { if (r.pm_team) teamSet.add(r.pm_team) })
 
-    const prodList = [...productSet].filter(pid => pid !== '__unlinked__').sort((a, b) => {
+    const prodList = [...productSet].filter(pid => pid !== '__unlinked__' && isVisibleProduct(pid)).sort((a, b) => {
       const pa = products.find((p: any) => p.id === a); const pb = products.find((p: any) => p.id === b)
       return (pa?.pm_name || a).localeCompare(pb?.pm_name || b)
     })
