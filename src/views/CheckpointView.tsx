@@ -7,7 +7,6 @@ import { SearchBar } from '../components/SearchBar'
 import { EmptyState } from '../components/EmptyState'
 
 const STATUS_OPTIONS = ['To Do', 'In Progress', 'Done', 'N/A']
-const PIPELINE_PHASES = ['Onboarding', 'Development Phase 1', 'Development Phase 2', 'Review', 'Live']
 
 export function CheckpointView() {
   const [data, setData] = useState<any[]>([]); const [key, setKey] = useState(0); const [filterProject, setFilterProject] = useState(''); const [filterPhase, setFilterPhase] = useState(''); const reload = () => setKey(k => k + 1)
@@ -16,7 +15,20 @@ export function CheckpointView() {
   const products = useMemo(() => DS.getAll('pm_product'), [key])
   const vsConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'value_stream' }), [key])
   const checklistConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'project_checklist' }), [key])
+  const phaseConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'project_phase' }), [key])
   const { term } = useSearch()
+
+  const getPhases = (vsName: string): string[] => {
+    const entries = phaseConfigs.filter((c: any) => c.pm_name.startsWith(vsName + ':'))
+    const source = entries.length > 0 ? entries : phaseConfigs.filter((c: any) => c.pm_name.startsWith('_:'))
+    return source.sort((a: any, b: any) => parseInt(a.pm_name.split(':').pop()!) - parseInt(b.pm_name.split(':').pop()!)).map((c: any) => c.pm_description)
+  }
+
+  const getAllPhases = useMemo(() => {
+    const s = new Set<string>()
+    phaseConfigs.forEach((c: any) => s.add(c.pm_description))
+    return [...s]
+  }, [phaseConfigs])
 
   const getTasksForPhase = (vsName: string, phase: string): string[] => {
     // Try VS-specific first
@@ -41,7 +53,8 @@ export function CheckpointView() {
       if (!map[proj.id]) {
         map[proj.id] = { project: proj, product: prod, vsName, phases: {} }
       }
-      PIPELINE_PHASES.forEach(phase => {
+      const phases = getPhases(vsName)
+      phases.forEach(phase => {
         const tasks = getTasksForPhase(vsName, phase)
         if (tasks.length === 0) return
         if (!map[proj.id].phases[phase]) map[proj.id].phases[phase] = []
@@ -100,7 +113,7 @@ export function CheckpointView() {
         </select>
         <select value={filterPhase} onChange={e => setFilterPhase(e.target.value)} style={{ padding: '8px 12px', fontSize: '0.82rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface)' }}>
           <option value="">All Phases</option>
-          {PIPELINE_PHASES.map(p => <option key={p} value={p}>{p}</option>)}
+          {getAllPhases.map(p => <option key={p} value={p}>{p}</option>)}
         </select>
         {filterProject || filterPhase ? (
           <button className="btn-sm" onClick={() => { setFilterProject(''); setFilterPhase('') }} style={{ padding: '6px 12px', fontSize: '0.78rem' }}>Clear Filters</button>
