@@ -191,7 +191,7 @@ export function SprintView() {
           </thead>
           <tbody>
             {gridTeams.map((team, idx) => (
-              <tr key={team} style={{ borderBottom: '1px solid var(--border-light)', background: idx % 2 === 0 ? 'transparent' : 'var(--border-light)' }}>
+              <tr key={team} style={{ borderBottom: '1px solid var(--border-light)', background: idx % 2 === 0 ? 'transparent' : '#e8ecf5' }}>
                 <td style={{ padding: '12px 14px', fontWeight: 600, textAlign: 'left', borderRight: '1px solid var(--border-light)', background: 'var(--border-light)', color: 'var(--text)', whiteSpace: 'nowrap', position: 'sticky', left: 0, zIndex: 0 }}>
                   👥 {getTeamLabel(team)}
                 </td>
