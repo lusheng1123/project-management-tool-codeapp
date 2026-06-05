@@ -40,6 +40,7 @@ function SprintCard({ rel, navigate }: { rel: any; navigate: (t: string, id?: st
 
 export function SprintView() {
   const [key] = useState(0)
+  const [showAll, setShowAll] = useState(false)
   const { navigate } = useNavigation()
   const { roles, hasRole } = useRole()
   const releases = useMemo(() => DS.getAll('pm_release'), [key])
@@ -96,7 +97,7 @@ export function SprintView() {
     const productSet = new Set<string>()
     const grid: Record<string, Record<string, any[]>> = {}
 
-    releases.forEach((rel: any) => {
+    dataReleases.forEach((rel: any) => {
       const ri = items.filter((i: any) => i.pm_release === rel.id)
       const pids = getProductIdsForRelease(rel.id)
       const entry = {
@@ -154,6 +155,8 @@ export function SprintView() {
     return { gridProducts: prodList, gridTeams: teamList, matrix: grid }
   }, [releases, items, stories, epics, projects, products, assignments, resources])
 
+  const dataReleases = useMemo(() => showAll ? releases : releases.filter((r: any) => r.pm_status !== 'Released'), [releases, showAll])
+
   const activeReleases = releases.filter((r: any) => ['Open', 'In Review'].includes(r.pm_status))
 
   const getProductName = (pid: string) => products.find((p: any) => p.id === pid)?.pm_name || pid
@@ -176,9 +179,15 @@ export function SprintView() {
 
   return (
     <div>
-      <div className="dashboard-header"><h2>📋 Sprint Board</h2></div>
+      <div className="dashboard-header">
+        <h2>📋 Sprint Board</h2>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--text-muted)', cursor: 'pointer', userSelect: 'none' }}>
+          <input type="checkbox" checked={showAll} onChange={e => setShowAll(e.target.checked)} style={{ accentColor: 'var(--primary)' }} />
+          Show completed sprints
+        </label>
+      </div>
       <StatsCards stats={[
-        { value: releases.length, label: 'Total Sprints' },
+        { value: dataReleases.length, label: 'Total Sprints' },
         { value: activeReleases.length, label: 'Active' },
         { value: items.length, label: 'Stories' }
       ]} />
