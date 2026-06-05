@@ -88,10 +88,30 @@ export function CheckpointView() {
            allCks.some((ck: any) => ck.pm_task?.toLowerCase().includes(term.toLowerCase()) || ck.pm_owner?.toLowerCase().includes(term.toLowerCase()))
   })
 
-  const updateCheckpoint = (id: string, field: string, value: string) => {
-    DS.update('pm_checkpoint', id, { [field]: value })
+  const upsert = (ck: any, field: string, value: string) => {
+    if (ck._exists) {
+      DS.update('pm_checkpoint', ck.id, { [field]: value })
+    } else {
+      const base: any = { pm_projectname: ck.pm_projectname, pm_phase: ck.pm_phase, pm_task: ck.pm_task, pm_owner: '', pm_status: 'To Do' }
+      base[field] = value
+      if (field !== 'pm_status') base.pm_status = 'In Progress'
+      DS.create('pm_checkpoint', base)
+    }
     reload()
   }
+
+  const generateAll = (g: any) => {
+    Object.values(g.phases).flat().forEach((ck: any) => {
+      if (ck._exists) return
+      DS.create('pm_checkpoint', {
+        pm_projectname: ck.pm_projectname, pm_phase: ck.pm_phase, pm_task: ck.pm_task,
+        pm_owner: '', pm_status: 'To Do'
+      })
+    })
+    reload()
+  }
+
+  const missingCount = (g: any) => Object.values(g.phases).flat().filter((ck: any) => !ck._exists).length
 
   const allItems = grouped.flatMap((g: any) => Object.values(g.phases).flat() as any[])
   const totalCks = allItems.length
@@ -134,6 +154,11 @@ export function CheckpointView() {
                 {g.product && <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-muted)' }}>📦 {g.product.pm_name}</span>}
                 {g.vsName && <span style={{ fontSize: '0.7rem', fontWeight: 500, background: 'var(--primary-bg)', padding: '2px 8px', borderRadius: '10px' }}>VS: {g.vsName}</span>}
                 <span className={`badge ${badgeClass(g.project.pm_status)}`} style={{ fontSize: '0.7rem' }}>{g.project.pm_status}</span>
+                {missingCount(g) > 0 && (
+                  <button className="btn-sm btn-primary" onClick={() => generateAll(g)} style={{ padding: '4px 10px', fontSize: '0.72rem', marginLeft: 'auto' }}>
+                    Generate {missingCount(g)} Items
+                  </button>
+                )}
               </h3>
 
               {Object.entries(g.phases).map(([phase, items]: [string, any]) => {
@@ -163,27 +188,40 @@ export function CheckpointView() {
                       </thead>
                       <tbody>
                         {items.map((ck: any) => (
-                          <tr key={`${ck.pm_phase}-${ck.pm_task}`} className="data-row" style={{ opacity: ck._exists ? 1 : 0.55 }}>
+                          <tr key={`${ck.pm_phase}-${ck.pm_task}`} className="data-row" style={{ opacity: ck._exists ? 1 : 0.65 }}>
                             <td style={{ fontWeight: 500 }}>{ck.pm_task}</td>
-                            <td>{ck.pm_owner || '—'}</td>
                             <td>
-                              {ck._exists ? (
-                                <select
-                                  value={ck.pm_status || 'To Do'}
-                                  onChange={e => updateCheckpoint(ck.id, 'pm_status', e.target.value)}
-                                  style={{ padding: '3px 6px', fontSize: '0.78rem', borderRadius: '4px', border: '1px solid var(--border)' }}
-                                >
-                                  {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                                </select>
-                              ) : null}
-                              <span className={`badge ${badgeClass(ck.pm_status)}`} style={{ fontSize: '0.65rem', marginLeft: ck._exists ? '6px' : 0 }}>
+                              <input type="text" value={ck.pm_owner || ''} onChange={e => upsert(ck, 'pm_owner', e.target.value)}
+                                placeholder="Owner" style={{ padding: '3px 6px', fontSize: '0.78rem', borderRadius: '4px', border: '1px solid var(--border)', width: '100%', maxWidth: '120px' }} />
+                            </td>
+                            <td>
+                              <select
+                                value={ck.pm_status || 'To Do'}
+                                onChange={e => upsert(ck, 'pm_status', e.target.value)}
+                                style={{ padding: '3px 6px', fontSize: '0.78rem', borderRadius: '4px', border: '1px solid var(--border)' }}
+                              >
+                                {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                              </select>
+                              <span className={`badge ${badgeClass(ck.pm_status)}`} style={{ fontSize: '0.65rem', marginLeft: '6px' }}>
                                 {ck.pm_status || 'To Do'}
                               </span>
                             </td>
-                            <td style={{ fontSize: '0.8rem' }}>{ck.pm_plan_start || '—'}</td>
-                            <td style={{ fontSize: '0.8rem' }}>{ck.pm_plan_end || '—'}</td>
-                            <td style={{ fontSize: '0.8rem' }}>{ck.pm_actual_start || '—'}</td>
-                            <td style={{ fontSize: '0.8rem' }}>{ck.pm_actual_end || '—'}</td>
+                            <td style={{ fontSize: '0.8rem' }}>
+                              <input type="date" value={ck.pm_plan_start || ''} onChange={e => upsert(ck, 'pm_plan_start', e.target.value)}
+                                style={{ padding: '2px 4px', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid var(--border)', width: '110px' }} />
+                            </td>
+                            <td style={{ fontSize: '0.8rem' }}>
+                              <input type="date" value={ck.pm_plan_end || ''} onChange={e => upsert(ck, 'pm_plan_end', e.target.value)}
+                                style={{ padding: '2px 4px', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid var(--border)', width: '110px' }} />
+                            </td>
+                            <td style={{ fontSize: '0.8rem' }}>
+                              <input type="date" value={ck.pm_actual_start || ''} onChange={e => upsert(ck, 'pm_actual_start', e.target.value)}
+                                style={{ padding: '2px 4px', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid var(--border)', width: '110px' }} />
+                            </td>
+                            <td style={{ fontSize: '0.8rem' }}>
+                              <input type="date" value={ck.pm_actual_end || ''} onChange={e => upsert(ck, 'pm_actual_end', e.target.value)}
+                                style={{ padding: '2px 4px', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid var(--border)', width: '110px' }} />
+                            </td>
                           </tr>
                         ))}
                       </tbody>
