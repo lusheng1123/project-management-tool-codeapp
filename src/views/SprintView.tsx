@@ -51,21 +51,24 @@ export function SprintView() {
   const assignments = useMemo(() => DS.getAll('pm_assignment'), [key])
   const resources = useMemo(() => DS.getAll('pm_resource'), [key])
 
-  // VSO filtering: only show products in assigned value streams
-  const vsoVSIds = useMemo(() => {
-    if (!hasRole('Value Stream Owner')) return null
-    if (hasRole('Admin')) return null
-    const vsoUser = DS.getAll('pm_user').find((u: any) => u.pm_role === 'Value Stream Owner' && u.pm_valuestream)
-    if (!vsoUser?.pm_valuestream) return new Set<string>()
-    return new Set(vsoUser.pm_valuestream.split(',').map((s: string) => s.trim()).filter(Boolean))
-  }, [roles])
-
-  const vsoProductIds = useMemo(() => {
-    if (!vsoVSIds) return null
-    return new Set(products.filter((p: any) => vsoVSIds.has(p.pm_valuestream)).map((p: any) => p.id))
-  }, [vsoVSIds, products])
-
-  const isVisibleProduct = (pid: string) => !vsoProductIds || vsoProductIds.has(pid)
+  // Role-based product visibility
+  const visibleProductIds = useMemo(() => {
+    if (hasRole('Admin')) return null // all products
+    if (hasRole('Value Stream Owner')) {
+      const vsoUser = DS.getAll('pm_user').find((u: any) => u.pm_role === 'Value Stream Owner' && u.pm_valuestream)
+      if (!vsoUser?.pm_valuestream) return new Set<string>()
+      const vsIds = new Set(vsoUser.pm_valuestream.split(',').map((s: string) => s.trim()).filter(Boolean))
+      return new Set(products.filter((p: any) => vsIds.has(p.pm_valuestream)).map((p: any) => p.id))
+    }
+    if (hasRole('Business Analyst')) {
+      return new Set(DS.getAll('pm_demand').filter((d: any) => d.pm_status !== 'Rejected' && d.pm_product).map((d: any) => d.pm_product))
+    }
+    if (hasRole('Release Manager')) return null // all
+    if (hasRole('Delivery Lead')) return null // all
+    if (hasRole('Product Owner')) return null // all
+    if (hasRole('ITSO')) return null // all
+    return null
+  }, [roles, products])
 
   const getTeamForEpic = (epicId: string): Set<string> => {
     const teams = new Set<string>()
@@ -142,7 +145,7 @@ export function SprintView() {
     products.forEach((p: any) => productSet.add(p.id))
     resources.forEach((r: any) => { if (r.pm_team) teamSet.add(r.pm_team) })
 
-    const prodList = [...productSet].filter(pid => pid !== '__unlinked__' && isVisibleProduct(pid)).sort((a, b) => {
+    const prodList = [...productSet].filter(pid => pid !== '__unlinked__' && (!visibleProductIds || visibleProductIds.has(pid))).sort((a, b) => {
       const pa = products.find((p: any) => p.id === a); const pb = products.find((p: any) => p.id === b)
       return (pa?.pm_name || a).localeCompare(pb?.pm_name || b)
     })
