@@ -53,7 +53,11 @@ export function SprintView() {
   const resources = useMemo(() => DS.getAll('pm_resource'), [key])
 
   const dataReleases = useMemo(() => showAll ? releases : releases.filter((r: any) => r.pm_status !== 'Released'), [releases, showAll])
-  const activeReleases = releases.filter((r: any) => ['Open', 'In Review'].includes(r.pm_status))
+  const activeReleases = dataReleases.filter((r: any) => ['Open', 'In Review'].includes(r.pm_status))
+  const visibleItems = useMemo(() => {
+    const relIds = new Set(dataReleases.map((r: any) => r.id))
+    return items.filter((i: any) => relIds.has(i.pm_release)).length
+  }, [dataReleases, items])
 
   const visibleProductIds = useMemo(() => {
     if (hasRole('Admin')) return null
@@ -175,7 +179,7 @@ export function SprintView() {
       <StatsCards stats={[
         { value: dataReleases.length, label: 'Total Sprints' },
         { value: activeReleases.length, label: 'Active' },
-        { value: items.length, label: 'Stories' }
+        { value: visibleItems, label: 'Stories' }
       ]} />
       <div style={{ overflowX: 'auto', marginTop: '16px' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', tableLayout: 'auto' }}>
