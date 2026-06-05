@@ -169,7 +169,7 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 | Detail | pm_detail | Multiple Lines of Text (4000) | No | |
 | Type | pm_type | Single Line of Text (50) | No | `pm_config` type=`demand_type` |
 | Priority | pm_priority | Single Line of Text (50) | No | `pm_config` type=`priority` |
-| Status | pm_status | Single Line of Text (50) | No | `pm_config` type=`demand_status` |
+| Status | pm_status | Single Line of Text (50) | No | Flow-driven from `demand_flow` config |
 | Value Stream | pm_valuestream | Single Line of Text (100) | No | `pm_config` type=`value_stream` |
 | Capability | pm_capability | Lookup → pm_capability | No | |
 | Product | pm_product | Lookup → pm_product | **Yes** | |
@@ -310,7 +310,7 @@ Values: `Draft`, `Open`, `In Review`, `Released`
 | 1 | ReleasesView buttons | Conditional rendering per status |
 | 2 | `badgeClass()` | Badge colors |
 
-### Demand Workflow (demand_status)
+### Demand Workflow (demand_flow)
 
 Values: `Submitted`, `Triaging`, `Assessed`, `Approved`, `Rejected`, `Converted`
 
@@ -378,7 +378,7 @@ Values: `G`, `A`, `R`
 | pm_userstory | 15 |
 | pm_risk | 6 |
 | pm_dependency | 6 |
-| pm_config | 93 entries (21 types) |
+| pm_config | 86 entries (20 types) |
 | pm_demand | 5 |
 | pm_release | 5 |
 | pm_releaseitem | 14 |
