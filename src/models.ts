@@ -50,7 +50,8 @@ export const MODELS: Record<string, Model> = {
     { name: 'pm_enhancementtype', label: 'Enhancement Type', type: 'text' },
     { name: 'pm_priority', label: 'Priority', type: 'text' },
     { name: 'pm_scope', label: 'Scope', type: 'multiline' },
-    { name: 'pm_yearquarter', label: 'Year/Quarter', type: 'text' }
+    { name: 'pm_yearquarter', label: 'Year/Quarter', type: 'text' },
+    { name: 'pm_governance_template', label: 'Gov Template', type: 'text' }
   ]},
   pm_control: { name: 'Control', fields: [
     { name: 'pm_detail', label: 'Control Detail', type: 'multiline', required: true },

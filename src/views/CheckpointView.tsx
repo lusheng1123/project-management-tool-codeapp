@@ -67,17 +67,18 @@ export function CheckpointView() {
   }
 
   const grouped = useMemo(() => {
-    const map: Record<string, { project: any; product: any; vsName: string; phases: Record<string, any[]> }> = {}
+    const map: Record<string, { project: any; product: any; vsName: string; template: string; phases: Record<string, any[]> }> = {}
     projects.filter((pr: any) => !visibleProjectIds || visibleProjectIds.has(pr.id)).forEach((proj: any) => {
       const prod = products.find((p: any) => p.id === proj.pm_productname)
       const vs = prod?.pm_valuestream ? vsConfigs.find((c: any) => c.id === prod.pm_valuestream) : null
       const vsName = vs?.pm_name || ''
+      const template = proj.pm_governance_template || vsName
       if (!map[proj.id]) {
-        map[proj.id] = { project: proj, product: prod, vsName, phases: {} }
+        map[proj.id] = { project: proj, product: prod, vsName, template: proj.pm_governance_template || '', phases: {} }
       }
-      const phases = getPhases(vsName)
+      const phases = getPhases(template)
       phases.forEach(phase => {
-        const tasks = getTasksForPhase(vsName, phase)
+        const tasks = getTasksForPhase(template, phase)
         if (tasks.length === 0) return
         if (!map[proj.id].phases[phase]) map[proj.id].phases[phase] = []
         tasks.forEach(task => {
@@ -174,7 +175,8 @@ export function CheckpointView() {
               }}>
                 📁 {g.project.pm_name}
                 {g.product && <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-muted)' }}>📦 {g.product.pm_name}</span>}
-                {g.vsName && <span style={{ fontSize: '0.7rem', fontWeight: 500, background: 'var(--primary-bg)', padding: '2px 8px', borderRadius: '10px' }}>VS: {g.vsName}</span>}
+                {g.template && <span style={{ fontSize: '0.7rem', fontWeight: 500, background: 'var(--primary-bg)', color: 'var(--primary-dark)', padding: '2px 8px', borderRadius: '10px' }}>Template: {g.template}</span>}
+                {!g.template && g.vsName && <span style={{ fontSize: '0.7rem', fontWeight: 500, background: 'var(--primary-bg)', padding: '2px 8px', borderRadius: '10px' }}>VS: {g.vsName}</span>}
                 <span className={`badge ${badgeClass(g.project.pm_status)}`} style={{ fontSize: '0.7rem' }}>{g.project.pm_status}</span>
                 {canEdit && missingCount(g) > 0 && (
                   <button className="btn-sm btn-primary" onClick={() => generateAll(g)} style={{ padding: '4px 10px', fontSize: '0.72rem', marginLeft: 'auto' }}>
