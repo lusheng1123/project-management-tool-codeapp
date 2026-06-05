@@ -135,6 +135,7 @@ export const MODELS: Record<string, Model> = {
       { name: 'pm_username', label: 'Username', type: 'text', required: true },
       { name: 'pm_displayname', label: 'Display Name', type: 'text', required: true },
       { name: 'pm_role', label: 'Role', type: 'text' },
+      { name: 'pm_valuestream', label: 'Value Stream', type: 'text' },
       { name: 'pm_email', label: 'Email', type: 'email' },
       { name: 'pm_status', label: 'Status', type: 'text' }
     ]}
