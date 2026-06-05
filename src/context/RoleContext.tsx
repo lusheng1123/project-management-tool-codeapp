@@ -2,12 +2,12 @@ import { createContext, useContext, useState } from 'react'
 
 const TABS_BY_ROLE: Record<string, string[]> = {
   Admin: ['dashboard','portfolio','demand','capabilities','products','projects','requirements','epics','stories','risks','dependencies','releases','sprints','governance','resources','users','config'],
-  'Value Stream Owner': ['dashboard','portfolio','demand','products','projects','capabilities','requirements','epics','stories','risks','dependencies','sprints','governance'],
-  'Product Owner': ['dashboard','portfolio','demand','products','requirements','epics','stories','sprints','governance'],
-  'Delivery Lead': ['dashboard','portfolio','demand','projects','epics','stories','requirements','releases','sprints','governance','resources','risks','dependencies'],
-  'Business Analyst': ['dashboard','portfolio','demand','requirements','products','capabilities','sprints','governance'],
-  'Release Manager': ['dashboard','portfolio','releases','sprints','governance','epics','stories','requirements'],
-  ITSO: ['dashboard','portfolio','demand','risks','dependencies','requirements','sprints','governance']
+  'Value Stream Owner': ['dashboard','portfolio','demand','products','projects','capabilities','requirements','epics','stories','risks','dependencies','releases','sprints','governance'],
+  'Product Owner': ['dashboard','portfolio','demand','products','projects','requirements','epics','stories','risks','dependencies','releases','sprints','governance'],
+  'Delivery Lead': ['dashboard','portfolio','demand','products','projects','capabilities','requirements','epics','stories','risks','dependencies','releases','sprints','governance','resources','users'],
+  'Business Analyst': ['dashboard','portfolio','demand','products','projects','requirements','epics','stories','risks','dependencies','releases','sprints','governance','capabilities'],
+  'Release Manager': ['dashboard','portfolio','products','projects','requirements','epics','stories','risks','dependencies','releases','sprints','governance'],
+  ITSO: ['dashboard','portfolio','products','projects','requirements','epics','stories','risks','dependencies','releases','sprints','governance']
 }
 
 export function getAllowedTabs(roles: string[]): string[] {
