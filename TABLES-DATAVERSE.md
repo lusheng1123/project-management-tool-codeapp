@@ -262,8 +262,24 @@ All configurable values live in `pm_config`. Add/edit/remove values in the ⚙�
 | `tool` | pm_releaseitem.pm_tool | Jira, Azure DevOps, GitHub, ServiceNow, Jenkins | No |
 | `demand_type` | pm_demand.pm_type | Feature, Bug, Enhancement, Tech Debt | No |
 | `demand_status` | pm_demand.pm_status | Submitted, Triaging, Assessed, PSC Review, Approved, Rejected, Converted | **Yes** |
-| `demand_flow` | pm_demand (workflow) | Defines status progression per VS (pm_name=VS:order, pm_description=status). Last step = Approved (triggers conversion) | **Yes** |
+| `demand_flow` | pm_demand (workflow) | Defines status progression per VS (pm_name=VS:order, pm_description=status). Last step = Approved (triggers conversion). Flow step count shown in Portfolio. | **Yes** |
 | `user_role` | pm_user.pm_role | Value Stream Owner, Product Owner, Delivery Lead, Business Analyst, Admin, Release Manager, ITSO | **Yes** |
+
+---
+
+## Portfolio View
+
+The **📈 Portfolio** tab shows a holistic view of the entire portfolio grouped by Value Stream → Product.
+
+| Metric | Source |
+|---|---|
+| Demand count + status breakdown | `pm_demand` grouped by product |
+| Project count | `pm_project.pm_productname` |
+| Risk & dependency counts | `pm_risk.pm_productname`, `pm_dependency.pm_productname` |
+| Story Points (total/completed) | `pm_userstory.pm_storypoint` via epics → projects; completed = epics with RAG=G |
+| Active sprints | `pm_release` → release items → stories → epics → projects chain |
+| Teams involved | `pm_assignment` → `pm_resource.pm_team` via epics |
+| Flow steps | `demand_flow` config count per VS |
 
 > **Yes** = values matched in `badgeClass()` or view logic. Renaming breaks colors/behavior. Adding new values gets `badge-gray` (safe default). **No** = pure labels, freely editable.
 
