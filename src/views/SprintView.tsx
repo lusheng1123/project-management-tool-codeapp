@@ -52,9 +52,11 @@ export function SprintView() {
   const assignments = useMemo(() => DS.getAll('pm_assignment'), [key])
   const resources = useMemo(() => DS.getAll('pm_resource'), [key])
 
-  // Role-based product visibility
+  const dataReleases = useMemo(() => showAll ? releases : releases.filter((r: any) => r.pm_status !== 'Released'), [releases, showAll])
+  const activeReleases = releases.filter((r: any) => ['Open', 'In Review'].includes(r.pm_status))
+
   const visibleProductIds = useMemo(() => {
-    if (hasRole('Admin')) return null // all products
+    if (hasRole('Admin')) return null
     if (hasRole('Value Stream Owner')) {
       const vsoUser = DS.getAll('pm_user').find((u: any) => u.pm_role === 'Value Stream Owner' && u.pm_valuestream)
       if (!vsoUser?.pm_valuestream) return new Set<string>()
@@ -64,17 +66,12 @@ export function SprintView() {
     if (hasRole('Business Analyst')) {
       return new Set(DS.getAll('pm_demand').filter((d: any) => d.pm_status !== 'Rejected' && d.pm_product).map((d: any) => d.pm_product))
     }
-    if (hasRole('Release Manager')) return null // all
-    if (hasRole('Delivery Lead')) return null // all
-    if (hasRole('Product Owner')) return null // all
-    if (hasRole('ITSO')) return null // all
     return null
   }, [roles, products])
 
   const getTeamForEpic = (epicId: string): Set<string> => {
     const teams = new Set<string>()
-    const assigns = assignments.filter((a: any) => a.pm_epic === epicId)
-    assigns.forEach((a: any) => {
+    assignments.filter((a: any) => a.pm_epic === epicId).forEach((a: any) => {
       const res = resources.find((r: any) => r.id === a.pm_resource)
       if (res?.pm_team) teams.add(res.pm_team)
     })
@@ -104,34 +101,22 @@ export function SprintView() {
         ...rel, storyCount: ri.length,
         signed: ri.filter((i: any) => i.pm_signoff_status === 'Approved').length,
         pending: ri.filter((i: any) => i.pm_signoff_status === 'Pending').length,
-        totalSP: ri.reduce((sum: number, i: any) => {
-          const s = stories.find((st: any) => st.id === i.pm_userstory)
-          return sum + (s?.pm_storypoint || 0)
-        }, 0),
-        completedSP: ri.filter((i: any) => i.pm_signoff_status === 'Approved').reduce((sum: number, i: any) => {
-          const s = stories.find((st: any) => st.id === i.pm_userstory)
-          return sum + (s?.pm_storypoint || 0)
-        }, 0)
+        totalSP: ri.reduce((sum: number, i: any) => { const s = stories.find((st: any) => st.id === i.pm_userstory); return sum + (s?.pm_storypoint || 0) }, 0),
+        completedSP: ri.filter((i: any) => i.pm_signoff_status === 'Approved').reduce((sum: number, i: any) => { const s = stories.find((st: any) => st.id === i.pm_userstory); return sum + (s?.pm_storypoint || 0) }, 0)
       }
-
-      // Get teams for this release
       const relTeams = new Set<string>()
       ri.forEach((i: any) => {
         const story = stories.find((s: any) => s.id === i.pm_userstory)
         if (story?.pm_epicid) getTeamForEpic(story.pm_epicid).forEach(t => relTeams.add(t))
       })
       if (relTeams.size === 0) relTeams.add('__unassigned__')
-
-      // For each product, find which teams worked on it in this release
       pids.forEach(pid => {
-        // Only assign this release to teams that worked on epics linked to this product
         ri.forEach((i: any) => {
           const story = stories.find((s: any) => s.id === i.pm_userstory)
           const epic = story ? epics.find((e: any) => e.id === story.pm_epicid) : null
           const proj = epic ? projects.find((p: any) => p.id === epic.pm_projectname) : null
           if (!proj || proj.pm_productname !== pid) return
-          const tSet = getTeamForEpic(epic.id)
-          tSet.forEach(team => {
+          getTeamForEpic(epic.id).forEach(team => {
             if (!grid[team]) grid[team] = {}
             if (!grid[team][pid]) grid[team][pid] = []
             if (!grid[team][pid].find((e: any) => e.id === rel.id)) grid[team][pid].push(entry)
@@ -142,7 +127,6 @@ export function SprintView() {
       })
     })
 
-    // Include teams and products from data even if no sprints
     products.forEach((p: any) => productSet.add(p.id))
     resources.forEach((r: any) => { if (r.pm_team) teamSet.add(r.pm_team) })
 
@@ -153,11 +137,7 @@ export function SprintView() {
     const teamList = [...teamSet].filter(t => t !== '__unassigned__').sort()
 
     return { gridProducts: prodList, gridTeams: teamList, matrix: grid }
-  }, [releases, items, stories, epics, projects, products, assignments, resources])
-
-  const dataReleases = useMemo(() => showAll ? releases : releases.filter((r: any) => r.pm_status !== 'Released'), [releases, showAll])
-
-  const activeReleases = releases.filter((r: any) => ['Open', 'In Review'].includes(r.pm_status))
+  }, [dataReleases, items, stories, epics, projects, products, assignments, resources])
 
   const getProductName = (pid: string) => products.find((p: any) => p.id === pid)?.pm_name || pid
   const getTeamLabel = (team: string) => {
@@ -168,7 +148,13 @@ export function SprintView() {
   if (gridProducts.length === 0) {
     return (
       <div>
-        <div className="dashboard-header"><h2>📋 Sprint Board</h2></div>
+        <div className="dashboard-header">
+          <h2>📋 Sprint Board</h2>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--text-muted)', cursor: 'pointer', userSelect: 'none' }}>
+            <input type="checkbox" checked={showAll} onChange={e => setShowAll(e.target.checked)} style={{ accentColor: 'var(--primary)' }} />
+            Show completed sprints
+          </label>
+        </div>
         <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
           <p style={{ fontSize: '1.1rem', marginBottom: '4px' }}>No sprints yet</p>
           <p style={{ fontSize: '0.85rem' }}>Create sprints from the 🚀 Releases tab.</p>
@@ -191,23 +177,13 @@ export function SprintView() {
         { value: activeReleases.length, label: 'Active' },
         { value: items.length, label: 'Stories' }
       ]} />
-
       <div style={{ overflowX: 'auto', marginTop: '16px' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem', tableLayout: 'auto' }}>
           <thead>
             <tr>
-              <th style={{
-                padding: '10px 14px', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 600,
-                borderBottom: '2px solid var(--border)', minWidth: '100px', position: 'sticky', left: 0,
-                background: 'var(--bg)', zIndex: 1
-              }}>Team \ Product</th>
+              <th style={{ padding: '10px 14px', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 600, borderBottom: '2px solid var(--border)', minWidth: '100px', position: 'sticky', left: 0, background: 'var(--bg)', zIndex: 1 }}>Team \ Product</th>
               {gridProducts.map(pid => (
-                <th key={pid} style={{
-                  padding: '10px 14px', textAlign: 'center', fontWeight: 700,
-                  borderBottom: '2px solid var(--primary)', minWidth: '200px', maxWidth: '280px',
-                  color: 'var(--primary-dark)', background: 'var(--primary-bg)',
-                  borderRadius: '4px 4px 0 0'
-                }}>
+                <th key={pid} style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, borderBottom: '2px solid var(--primary)', minWidth: '200px', maxWidth: '280px', color: 'var(--primary-dark)', background: 'var(--primary-bg)', borderRadius: '4px 4px 0 0' }}>
                   📦 {getProductName(pid)}
                 </th>
               ))}
@@ -216,21 +192,13 @@ export function SprintView() {
           <tbody>
             {gridTeams.map(team => (
               <tr key={team} style={{ borderBottom: '1px solid var(--border-light)' }}>
-                <td style={{
-                  padding: '12px 14px', fontWeight: 600, textAlign: 'left',
-                  borderRight: '1px solid var(--border-light)', background: 'var(--border-light)',
-                  color: 'var(--text)', whiteSpace: 'nowrap', position: 'sticky', left: 0,
-                  zIndex: 0
-                }}>
+                <td style={{ padding: '12px 14px', fontWeight: 600, textAlign: 'left', borderRight: '1px solid var(--border-light)', background: 'var(--border-light)', color: 'var(--text)', whiteSpace: 'nowrap', position: 'sticky', left: 0, zIndex: 0 }}>
                   👥 {getTeamLabel(team)}
                 </td>
                 {gridProducts.map(pid => {
                   const sprints = matrix[team]?.[pid] || []
                   return (
-                    <td key={pid} style={{
-                      padding: '8px', verticalAlign: 'top', borderRight: '1px solid var(--border-light)',
-                      minWidth: '200px', maxWidth: '280px'
-                    }}>
+                    <td key={pid} style={{ padding: '8px', verticalAlign: 'top', borderRight: '1px solid var(--border-light)', minWidth: '200px', maxWidth: '280px' }}>
                       {sprints.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: '20px 8px', color: 'var(--text-soft)', fontSize: '0.75rem' }}>—</div>
                       ) : (
