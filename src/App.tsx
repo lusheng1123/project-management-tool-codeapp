@@ -7,7 +7,7 @@ import { seedAllIfNeeded } from './seed'
 import {
   DashboardView, PortfolioView, ResourcesView, CapabilitiesView, ProductsView, RequirementsView,
   ProjectsView, EpicsView, UserStoriesView, RisksView,
-  DependenciesView, ReleasesView, SprintView, DemandView, ConfigView, UsersView
+  DependenciesView, ReleasesView, SprintView, CheckpointView, DemandView, ConfigView, UsersView
 } from './views'
 
 // Seed data on module load
@@ -19,7 +19,7 @@ export { MODELS, getFields, getModelName } from './models'
 export { seedAllIfNeeded } from './seed'
 export { badgeClass } from './context/UIContext'
 
-const ALL_TABS = [{ id: 'dashboard', label: '📊 Dashboard' },{ id: 'portfolio', label: '📈 Portfolio' },{ id: 'demand', label: '📥 Demand' },{ id: 'capabilities', label: '🎯 Capabilities' },{ id: 'products', label: '📦 Products' },{ id: 'projects', label: '📁 Projects' },{ id: 'requirements', label: '📋 Requirements' },{ id: 'epics', label: '⚡ Epics' },{ id: 'stories', label: '📝 Stories' },{ id: 'risks', label: '⚠️ Risks' },{ id: 'dependencies', label: '🔗 Deps' },{ id: 'releases', label: '🚀 Releases' },{ id: 'sprints', label: '📋 Sprints' },{ id: 'resources', label: '👥 Resources' },{ id: 'users', label: '👤 Users' },{ id: 'config', label: '⚙️ Config' }]
+const ALL_TABS = [{ id: 'dashboard', label: '📊 Dashboard' },{ id: 'portfolio', label: '📈 Portfolio' },{ id: 'demand', label: '📥 Demand' },{ id: 'capabilities', label: '🎯 Capabilities' },{ id: 'products', label: '📦 Products' },{ id: 'projects', label: '📁 Projects' },{ id: 'requirements', label: '📋 Requirements' },{ id: 'epics', label: '⚡ Epics' },{ id: 'stories', label: '📝 Stories' },{ id: 'risks', label: '⚠️ Risks' },{ id: 'dependencies', label: '🔗 Deps' },{ id: 'releases', label: '🚀 Releases' },{ id: 'sprints', label: '📋 Sprints' },{ id: 'checklist', label: '✅ Checklist' },{ id: 'resources', label: '👥 Resources' },{ id: 'users', label: '👤 Users' },{ id: 'config', label: '⚙️ Config' }]
 
 const ROLE_OPTIONS = ['Admin','Value Stream Owner','Product Owner','Delivery Lead','Business Analyst','Release Manager','ITSO']
 
@@ -29,7 +29,7 @@ function App() {
   const allowedIds = getAllowedTabs(roles)
   const visibleTabs = ALL_TABS.filter(t => allowedIds.includes(t.id))
   const handleReset = () => { if (!confirm('Reset all data?')) return; localStorage.clear(); seedAllIfNeeded(); window.location.reload() }
-  const renderTab = () => { switch (tab) { case 'dashboard': return <DashboardView />; case 'portfolio': return <PortfolioView />; case 'resources': return <ResourcesView />; case 'products': return <ProductsView />; case 'projects': return <ProjectsView />; case 'capabilities': return <CapabilitiesView />; case 'requirements': return <RequirementsView />; case 'demand': return <DemandView />; case 'epics': return <EpicsView />; case 'stories': return <UserStoriesView />; case 'risks': return <RisksView />; case 'dependencies': return <DependenciesView />; case 'releases': return <ReleasesView />; case 'sprints': return <SprintView />; case 'users': return <UsersView />; case 'config': return <ConfigView />; default: return <DashboardView /> } }
+  const renderTab = () => { switch (tab) { case 'dashboard': return <DashboardView />; case 'portfolio': return <PortfolioView />; case 'resources': return <ResourcesView />; case 'products': return <ProductsView />; case 'projects': return <ProjectsView />; case 'capabilities': return <CapabilitiesView />; case 'requirements': return <RequirementsView />; case 'demand': return <DemandView />; case 'epics': return <EpicsView />; case 'stories': return <UserStoriesView />; case 'risks': return <RisksView />; case 'dependencies': return <DependenciesView />; case 'releases': return <ReleasesView />; case 'sprints': return <SprintView />; case 'checklist': return <CheckpointView />; case 'users': return <UsersView />; case 'config': return <ConfigView />; default: return <DashboardView /> } }
   return (<div className="app-root"><header className="app-header"><h1>Project Management Tool</h1><span className="badge-mode mode-dev">DEV</span><span className="badge badge-blue" style={{ marginLeft: 8, fontSize: '0.7rem', padding: '2px 8px' }}>{roleName}</span><button className="btn-sm btn-reset" onClick={handleReset} style={{ marginLeft: 'auto' }}>🔄 Reset</button></header><div style={{ padding: '8px 28px', background: 'var(--border-light)', borderBottom: '1px solid var(--border)', display: 'flex', gap: 8, alignItems: 'center', fontSize: '0.8rem' }}><span style={{ color: 'var(--text-muted)' }}>Role:</span><select value={roleName} onChange={e => setRole(e.target.value)} style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', fontSize: '0.8rem' }}>{ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}</select></div><nav className="tab-nav">{visibleTabs.map(t => (<button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''}`} onClick={() => navigate(t.id)}>{t.label}</button>))}</nav><main className="main-content">{renderTab()}</main></div>)
 }
 

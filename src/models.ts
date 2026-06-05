@@ -56,6 +56,17 @@ export const MODELS: Record<string, Model> = {
     { name: 'pm_detail', label: 'Control Detail', type: 'multiline', required: true },
     { name: 'pm_projectname', label: 'Project', type: 'lookup', target: 'pm_project' }
   ]},
+  pm_checkpoint: { name: 'Checkpoint', fields: [
+    { name: 'pm_projectname', label: 'Project', type: 'lookup', target: 'pm_project', required: true },
+    { name: 'pm_phase', label: 'Phase', type: 'text', required: true },
+    { name: 'pm_task', label: 'Task', type: 'text', required: true },
+    { name: 'pm_owner', label: 'Owner', type: 'text' },
+    { name: 'pm_status', label: 'Status', type: 'text' },
+    { name: 'pm_plan_start', label: 'Plan Start', type: 'date' },
+    { name: 'pm_plan_end', label: 'Plan End', type: 'date' },
+    { name: 'pm_actual_start', label: 'Actual Start', type: 'date' },
+    { name: 'pm_actual_end', label: 'Actual End', type: 'date' }
+  ]},
   pm_epic: { name: 'Epic', fields: [
     { name: 'pm_title', label: 'Epic Title', type: 'text', required: true },
     { name: 'pm_detail', label: 'Epic Detail', type: 'multiline' },

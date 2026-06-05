@@ -1,13 +1,13 @@
 import { createContext, useContext, useState } from 'react'
 
 const TABS_BY_ROLE: Record<string, string[]> = {
-  Admin: ['dashboard','portfolio','demand','capabilities','products','projects','requirements','epics','stories','risks','dependencies','releases','sprints','resources','users','config'],
-  'Value Stream Owner': ['dashboard','portfolio','demand','products','capabilities','requirements','epics','stories','risks','dependencies','sprints'],
-  'Product Owner': ['dashboard','portfolio','demand','products','requirements','epics','stories','sprints'],
-  'Delivery Lead': ['dashboard','portfolio','demand','projects','epics','stories','requirements','releases','sprints','resources','risks','dependencies'],
-  'Business Analyst': ['dashboard','portfolio','demand','requirements','products','capabilities','sprints'],
-  'Release Manager': ['dashboard','portfolio','releases','sprints','epics','stories','requirements'],
-  ITSO: ['dashboard','portfolio','demand','risks','dependencies','requirements','sprints']
+  Admin: ['dashboard','portfolio','demand','capabilities','products','projects','requirements','epics','stories','risks','dependencies','releases','sprints','checklist','resources','users','config'],
+  'Value Stream Owner': ['dashboard','portfolio','demand','products','capabilities','requirements','epics','stories','risks','dependencies','sprints','checklist'],
+  'Product Owner': ['dashboard','portfolio','demand','products','requirements','epics','stories','sprints','checklist'],
+  'Delivery Lead': ['dashboard','portfolio','demand','projects','epics','stories','requirements','releases','sprints','checklist','resources','risks','dependencies'],
+  'Business Analyst': ['dashboard','portfolio','demand','requirements','products','capabilities','sprints','checklist'],
+  'Release Manager': ['dashboard','portfolio','releases','sprints','checklist','epics','stories','requirements'],
+  ITSO: ['dashboard','portfolio','demand','risks','dependencies','requirements','sprints','checklist']
 }
 
 export function getAllowedTabs(roles: string[]): string[] {
