@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { DS } from '../data'
 import { badgeClass } from '../context/UIContext'
+import { useRole } from '../context/RoleContext'
 import { useSearch } from '../context/SearchContext'
 import { StatsCards } from '../components/StatsCards'
 import { SearchBar } from '../components/SearchBar'
@@ -16,6 +17,27 @@ export function CheckpointView() {
   const vsConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'value_stream' }), [key])
   const checklistConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'project_checklist' }), [key])
   const phaseConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'project_phase' }), [key])
+  const { hasRole, roles } = useRole()
+
+  // Role-based project visibility
+  const visibleProjectIds = useMemo(() => {
+    if (hasRole('Admin') || hasRole('Delivery Lead') || hasRole('Release Manager') || hasRole('Product Owner') || hasRole('ITSO')) return null
+    if (hasRole('Value Stream Owner')) {
+      const vsoUser = DS.getAll('pm_user').find((u: any) => u.pm_role === 'Value Stream Owner' && u.pm_valuestream)
+      if (!vsoUser?.pm_valuestream) return new Set<string>()
+      const vsIds = new Set(vsoUser.pm_valuestream.split(',').map((s: string) => s.trim()).filter(Boolean))
+      const productIds = new Set<string>()
+      products.forEach((p: any) => { if (vsIds.has(p.pm_valuestream)) productIds.add(p.id) })
+      return new Set(projects.filter((pr: any) => pr.pm_productname && productIds.has(pr.pm_productname)).map((pr: any) => pr.id))
+    }
+    if (hasRole('Business Analyst')) {
+      const demandProductIds = new Set(DS.getAll('pm_demand').filter((d: any) => d.pm_status !== 'Rejected' && d.pm_product).map((d: any) => d.pm_product))
+      return new Set(projects.filter((pr: any) => pr.pm_productname && demandProductIds.has(pr.pm_productname)).map((pr: any) => pr.id))
+    }
+    return null
+  }, [roles, products, projects])
+
+  const canEdit = hasRole('Admin') || hasRole('Delivery Lead') || hasRole('Value Stream Owner') || hasRole('Product Owner') || hasRole('Release Manager')
   const { term } = useSearch()
 
   const getPhases = (vsName: string): string[] => {
@@ -46,7 +68,7 @@ export function CheckpointView() {
 
   const grouped = useMemo(() => {
     const map: Record<string, { project: any; product: any; vsName: string; phases: Record<string, any[]> }> = {}
-    projects.forEach((proj: any) => {
+    projects.filter((pr: any) => !visibleProjectIds || visibleProjectIds.has(pr.id)).forEach((proj: any) => {
       const prod = products.find((p: any) => p.id === proj.pm_productname)
       const vs = prod?.pm_valuestream ? vsConfigs.find((c: any) => c.id === prod.pm_valuestream) : null
       const vsName = vs?.pm_name || ''
@@ -154,7 +176,7 @@ export function CheckpointView() {
                 {g.product && <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-muted)' }}>📦 {g.product.pm_name}</span>}
                 {g.vsName && <span style={{ fontSize: '0.7rem', fontWeight: 500, background: 'var(--primary-bg)', padding: '2px 8px', borderRadius: '10px' }}>VS: {g.vsName}</span>}
                 <span className={`badge ${badgeClass(g.project.pm_status)}`} style={{ fontSize: '0.7rem' }}>{g.project.pm_status}</span>
-                {missingCount(g) > 0 && (
+                {canEdit && missingCount(g) > 0 && (
                   <button className="btn-sm btn-primary" onClick={() => generateAll(g)} style={{ padding: '4px 10px', fontSize: '0.72rem', marginLeft: 'auto' }}>
                     Generate {missingCount(g)} Items
                   </button>
@@ -191,13 +213,14 @@ export function CheckpointView() {
                           <tr key={`${ck.pm_phase}-${ck.pm_task}`} className="data-row" style={{ opacity: ck._exists ? 1 : 0.65 }}>
                             <td style={{ fontWeight: 500 }}>{ck.pm_task}</td>
                             <td>
-                              <input type="text" value={ck.pm_owner || ''} onChange={e => upsert(ck, 'pm_owner', e.target.value)}
+                              <input type="text" value={ck.pm_owner || ''} onChange={e => upsert(ck, 'pm_owner', e.target.value)} disabled={!canEdit}
                                 placeholder="Owner" style={{ padding: '3px 6px', fontSize: '0.78rem', borderRadius: '4px', border: '1px solid var(--border)', width: '100%', maxWidth: '120px' }} />
                             </td>
                             <td>
                               <select
                                 value={ck.pm_status || 'To Do'}
                                 onChange={e => upsert(ck, 'pm_status', e.target.value)}
+                                disabled={!canEdit}
                                 style={{ padding: '3px 6px', fontSize: '0.78rem', borderRadius: '4px', border: '1px solid var(--border)' }}
                               >
                                 {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -207,19 +230,19 @@ export function CheckpointView() {
                               </span>
                             </td>
                             <td style={{ fontSize: '0.8rem' }}>
-                              <input type="date" value={ck.pm_plan_start || ''} onChange={e => upsert(ck, 'pm_plan_start', e.target.value)}
+                              <input type="date" value={ck.pm_plan_start || ''} onChange={e => upsert(ck, 'pm_plan_start', e.target.value)} disabled={!canEdit}
                                 style={{ padding: '2px 4px', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid var(--border)', width: '110px' }} />
                             </td>
                             <td style={{ fontSize: '0.8rem' }}>
-                              <input type="date" value={ck.pm_plan_end || ''} onChange={e => upsert(ck, 'pm_plan_end', e.target.value)}
+                              <input type="date" value={ck.pm_plan_end || ''} onChange={e => upsert(ck, 'pm_plan_end', e.target.value)} disabled={!canEdit}
                                 style={{ padding: '2px 4px', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid var(--border)', width: '110px' }} />
                             </td>
                             <td style={{ fontSize: '0.8rem' }}>
-                              <input type="date" value={ck.pm_actual_start || ''} onChange={e => upsert(ck, 'pm_actual_start', e.target.value)}
+                              <input type="date" value={ck.pm_actual_start || ''} onChange={e => upsert(ck, 'pm_actual_start', e.target.value)} disabled={!canEdit}
                                 style={{ padding: '2px 4px', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid var(--border)', width: '110px' }} />
                             </td>
                             <td style={{ fontSize: '0.8rem' }}>
-                              <input type="date" value={ck.pm_actual_end || ''} onChange={e => upsert(ck, 'pm_actual_end', e.target.value)}
+                              <input type="date" value={ck.pm_actual_end || ''} onChange={e => upsert(ck, 'pm_actual_end', e.target.value)} disabled={!canEdit}
                                 style={{ padding: '2px 4px', fontSize: '0.75rem', borderRadius: '4px', border: '1px solid var(--border)', width: '110px' }} />
                             </td>
                           </tr>
