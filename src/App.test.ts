@@ -130,7 +130,7 @@ describe('seedAllIfNeeded', () => {
     expect(DS.getAll('pm_userstory')).toHaveLength(16)
     expect(DS.getAll('pm_risk')).toHaveLength(6)
     expect(DS.getAll('pm_dependency')).toHaveLength(6)
-    expect(DS.getAll('pm_checkpoint')).toHaveLength(16)
+    expect(DS.getAll('pm_checkpoint')).toHaveLength(24)
     expect(DS.getAll('pm_config').length).toBeGreaterThan(0)
   })
 
