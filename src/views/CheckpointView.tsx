@@ -10,7 +10,7 @@ const STATUS_OPTIONS = ['To Do', 'In Progress', 'Done', 'N/A']
 const PIPELINE_PHASES = ['Onboarding', 'Development Phase 1', 'Development Phase 2', 'Review', 'Live']
 
 export function CheckpointView() {
-  const [data, setData] = useState<any[]>([]); const [key, setKey] = useState(0); const reload = () => setKey(k => k + 1)
+  const [data, setData] = useState<any[]>([]); const [key, setKey] = useState(0); const [filterProject, setFilterProject] = useState(''); const [filterPhase, setFilterPhase] = useState(''); const reload = () => setKey(k => k + 1)
   useEffect(() => { setData(DS.getAll('pm_checkpoint')) }, [key])
   const projects = useMemo(() => DS.getAll('pm_project'), [key])
   const products = useMemo(() => DS.getAll('pm_product'), [key])
@@ -66,11 +66,14 @@ export function CheckpointView() {
     return Object.values(map)
   }, [projects, products, vsConfigs, data, checklistConfigs])
 
-  const filtered = term ? grouped.filter(g => {
+  const filtered = grouped.filter(g => {
+    if (filterProject && g.project.id !== filterProject) return false
+    if (filterPhase && !g.phases[filterPhase]) return false
+    if (!term) return true
     const allCks = Object.values(g.phases).flat() as any[]
     return g.project.pm_name.toLowerCase().includes(term.toLowerCase()) ||
            allCks.some((ck: any) => ck.pm_task?.toLowerCase().includes(term.toLowerCase()) || ck.pm_owner?.toLowerCase().includes(term.toLowerCase()))
-  }) : grouped
+  })
 
   const updateCheckpoint = (id: string, field: string, value: string) => {
     DS.update('pm_checkpoint', id, { [field]: value })
@@ -84,12 +87,25 @@ export function CheckpointView() {
 
   return (
     <div>
-      <div className="dashboard-header"><h2>✅ Governance Checklist</h2></div>
+      <div className="dashboard-header"><h2>✅ Governance</h2></div>
       <StatsCards stats={[
         { value: totalCks, label: 'Total Items' },
         { value: doneCks, label: 'Done' },
         { value: inProgressCks, label: 'In Progress' }
       ]} />
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <select value={filterProject} onChange={e => setFilterProject(e.target.value)} style={{ padding: '8px 12px', fontSize: '0.82rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface)' }}>
+          <option value="">All Projects</option>
+          {projects.map((p: any) => <option key={p.id} value={p.id}>{p.pm_name}</option>)}
+        </select>
+        <select value={filterPhase} onChange={e => setFilterPhase(e.target.value)} style={{ padding: '8px 12px', fontSize: '0.82rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', background: 'var(--surface)' }}>
+          <option value="">All Phases</option>
+          {PIPELINE_PHASES.map(p => <option key={p} value={p}>{p}</option>)}
+        </select>
+        {filterProject || filterPhase ? (
+          <button className="btn-sm" onClick={() => { setFilterProject(''); setFilterPhase('') }} style={{ padding: '6px 12px', fontSize: '0.78rem' }}>Clear Filters</button>
+        ) : null}
+      </div>
       <SearchBar />
 
       {!grouped.length ? <EmptyState msg="No checkpoints found" /> : (
