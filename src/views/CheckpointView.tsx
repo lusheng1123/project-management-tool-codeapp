@@ -7,27 +7,64 @@ import { SearchBar } from '../components/SearchBar'
 import { EmptyState } from '../components/EmptyState'
 
 const STATUS_OPTIONS = ['To Do', 'In Progress', 'Done', 'N/A']
+const PIPELINE_PHASES = ['Onboarding', 'Development Phase 1', 'Development Phase 2', 'Review', 'Live']
 
 export function CheckpointView() {
   const [data, setData] = useState<any[]>([]); const [key, setKey] = useState(0); const reload = () => setKey(k => k + 1)
   useEffect(() => { setData(DS.getAll('pm_checkpoint')) }, [key])
   const projects = useMemo(() => DS.getAll('pm_project'), [key])
   const products = useMemo(() => DS.getAll('pm_product'), [key])
+  const vsConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'value_stream' }), [key])
+  const checklistConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'project_checklist' }), [key])
   const { term } = useSearch()
 
+  const getTasksForPhase = (vsName: string, phase: string): string[] => {
+    // Try VS-specific first
+    const vsTasks = checklistConfigs
+      .filter((c: any) => c.pm_name.startsWith(vsName + ':' + phase + ':'))
+      .sort((a: any, b: any) => parseInt(a.pm_name.split(':').pop()!) - parseInt(b.pm_name.split(':').pop()!))
+      .map((c: any) => c.pm_description)
+    if (vsTasks.length > 0) return vsTasks
+    // Fallback to default (no VS prefix)
+    return checklistConfigs
+      .filter((c: any) => c.pm_name.startsWith(phase + ':'))
+      .sort((a: any, b: any) => parseInt(a.pm_name.split(':').pop()!) - parseInt(b.pm_name.split(':').pop()!))
+      .map((c: any) => c.pm_description)
+  }
+
   const grouped = useMemo(() => {
-    const map: Record<string, { project: any; product: any; phases: Record<string, any[]> }> = {}
-    data.forEach((ck: any) => {
-      const proj = projects.find((p: any) => p.id === ck.pm_projectname)
-      if (!proj) return
+    const map: Record<string, { project: any; product: any; vsName: string; phases: Record<string, any[]> }> = {}
+    projects.forEach((proj: any) => {
+      const prod = products.find((p: any) => p.id === proj.pm_productname)
+      const vs = prod?.pm_valuestream ? vsConfigs.find((c: any) => c.id === prod.pm_valuestream) : null
+      const vsName = vs?.pm_name || ''
       if (!map[proj.id]) {
-        map[proj.id] = { project: proj, product: products.find((p: any) => p.id === proj.pm_productname), phases: {} }
+        map[proj.id] = { project: proj, product: prod, vsName, phases: {} }
       }
-      if (!map[proj.id].phases[ck.pm_phase]) map[proj.id].phases[ck.pm_phase] = []
-      map[proj.id].phases[ck.pm_phase].push(ck)
+      PIPELINE_PHASES.forEach(phase => {
+        const tasks = getTasksForPhase(vsName, phase)
+        if (tasks.length === 0) return
+        if (!map[proj.id].phases[phase]) map[proj.id].phases[phase] = []
+        tasks.forEach(task => {
+          const existing = data.find((ck: any) => ck.pm_projectname === proj.id && ck.pm_phase === phase && ck.pm_task === task)
+          map[proj.id].phases[phase].push({
+            id: existing?.id || null,
+            pm_projectname: proj.id,
+            pm_phase: phase,
+            pm_task: task,
+            pm_owner: existing?.pm_owner || '',
+            pm_status: existing?.pm_status || 'To Do',
+            pm_plan_start: existing?.pm_plan_start || '',
+            pm_plan_end: existing?.pm_plan_end || '',
+            pm_actual_start: existing?.pm_actual_start || '',
+            pm_actual_end: existing?.pm_actual_end || '',
+            _exists: !!existing
+          })
+        })
+      })
     })
     return Object.values(map)
-  }, [data, projects, products])
+  }, [projects, products, vsConfigs, data, checklistConfigs])
 
   const filtered = term ? grouped.filter(g => {
     const allCks = Object.values(g.phases).flat() as any[]
@@ -40,9 +77,10 @@ export function CheckpointView() {
     reload()
   }
 
-  const totalCks = data.length
-  const doneCks = data.filter((c: any) => c.pm_status === 'Done').length
-  const inProgressCks = data.filter((c: any) => c.pm_status === 'In Progress').length
+  const allItems = grouped.flatMap((g: any) => Object.values(g.phases).flat() as any[])
+  const totalCks = allItems.length
+  const doneCks = allItems.filter((c: any) => c.pm_status === 'Done').length
+  const inProgressCks = allItems.filter((c: any) => c.pm_status === 'In Progress').length
 
   return (
     <div>
@@ -54,7 +92,7 @@ export function CheckpointView() {
       ]} />
       <SearchBar />
 
-      {!filtered.length ? <EmptyState msg="No checkpoints found" /> : (
+      {!grouped.length ? <EmptyState msg="No checkpoints found" /> : (
         <div>
           {filtered.map((g: any) => (
             <div key={g.project.id} style={{ marginBottom: '28px' }}>
@@ -65,6 +103,7 @@ export function CheckpointView() {
               }}>
                 📁 {g.project.pm_name}
                 {g.product && <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-muted)' }}>📦 {g.product.pm_name}</span>}
+                {g.vsName && <span style={{ fontSize: '0.7rem', fontWeight: 500, background: 'var(--primary-bg)', padding: '2px 8px', borderRadius: '10px' }}>VS: {g.vsName}</span>}
                 <span className={`badge ${badgeClass(g.project.pm_status)}`} style={{ fontSize: '0.7rem' }}>{g.project.pm_status}</span>
               </h3>
 
@@ -95,18 +134,20 @@ export function CheckpointView() {
                       </thead>
                       <tbody>
                         {items.map((ck: any) => (
-                          <tr key={ck.id} className="data-row">
+                          <tr key={`${ck.pm_phase}-${ck.pm_task}`} className="data-row" style={{ opacity: ck._exists ? 1 : 0.55 }}>
                             <td style={{ fontWeight: 500 }}>{ck.pm_task}</td>
                             <td>{ck.pm_owner || '—'}</td>
                             <td>
-                              <select
-                                value={ck.pm_status || 'To Do'}
-                                onChange={e => updateCheckpoint(ck.id, 'pm_status', e.target.value)}
-                                style={{ padding: '3px 6px', fontSize: '0.78rem', borderRadius: '4px', border: '1px solid var(--border)' }}
-                              >
-                                {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                              </select>
-                              <span className={`badge ${badgeClass(ck.pm_status)}`} style={{ fontSize: '0.65rem', marginLeft: '6px' }}>
+                              {ck._exists ? (
+                                <select
+                                  value={ck.pm_status || 'To Do'}
+                                  onChange={e => updateCheckpoint(ck.id, 'pm_status', e.target.value)}
+                                  style={{ padding: '3px 6px', fontSize: '0.78rem', borderRadius: '4px', border: '1px solid var(--border)' }}
+                                >
+                                  {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                              ) : null}
+                              <span className={`badge ${badgeClass(ck.pm_status)}`} style={{ fontSize: '0.65rem', marginLeft: ck._exists ? '6px' : 0 }}>
                                 {ck.pm_status || 'To Do'}
                               </span>
                             </td>
