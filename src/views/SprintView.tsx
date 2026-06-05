@@ -182,16 +182,16 @@ export function SprintView() {
           <thead>
             <tr>
               <th style={{ padding: '10px 14px', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 600, borderBottom: '2px solid var(--border)', minWidth: '100px', position: 'sticky', left: 0, background: 'var(--bg)', zIndex: 1 }}>Team \ Product</th>
-              {gridProducts.map(pid => (
-                <th key={pid} style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, borderBottom: '2px solid var(--primary)', minWidth: '200px', maxWidth: '280px', color: 'var(--primary-dark)', background: 'var(--primary-bg)', borderRadius: '4px 4px 0 0' }}>
+              {gridProducts.map((pid, idx) => (
+                <th key={pid} style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, borderBottom: '2px solid var(--primary)', minWidth: '200px', maxWidth: '280px', color: 'var(--primary-dark)', background: idx % 2 === 0 ? 'var(--primary-bg)' : '#e8ecff', borderRadius: '4px 4px 0 0' }}>
                   📦 {getProductName(pid)}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {gridTeams.map(team => (
-              <tr key={team} style={{ borderBottom: '1px solid var(--border-light)' }}>
+            {gridTeams.map((team, idx) => (
+              <tr key={team} style={{ borderBottom: '1px solid var(--border-light)', background: idx % 2 === 0 ? 'transparent' : 'var(--border-light)' }}>
                 <td style={{ padding: '12px 14px', fontWeight: 600, textAlign: 'left', borderRight: '1px solid var(--border-light)', background: 'var(--border-light)', color: 'var(--text)', whiteSpace: 'nowrap', position: 'sticky', left: 0, zIndex: 0 }}>
                   👥 {getTeamLabel(team)}
                 </td>
