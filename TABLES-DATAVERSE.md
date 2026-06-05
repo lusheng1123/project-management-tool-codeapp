@@ -238,6 +238,25 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 
 ---
 
+## 17. pm_checkpoint (Governance Checkpoint)
+
+| Display Name | Schema Name | Type | Required | Config Source |
+|---|---|---|---|---|
+| Checkpoint ID | pm_checkpointid | Primary Key (GUID) | Auto | |
+| Project | pm_projectname | Lookup → pm_project | Yes | |
+| Phase | pm_phase | Single Line of Text (100) | Yes | Pipeline phase name |
+| Task | pm_task | Single Line of Text (200) | Yes | From `project_checklist` config |
+| Owner | pm_owner | Single Line of Text (100) | No | |
+| Status | pm_status | Single Line of Text (50) | No | To Do, In Progress, Done, N/A |
+| Plan Start | pm_plan_start | Date Only | No | |
+| Plan End | pm_plan_end | Date Only | No | |
+| Actual Start | pm_actual_start | Date Only | No | |
+| Actual End | pm_actual_end | Date Only | No | |
+
+> Tasks defined in `project_checklist` config. Format: `pm_name={phase}:{order}`, `pm_description={task}`. VS-specific: `{VS}:{phase}:{order}`.
+
+---
+
 ## Config Type Reference
 
 All configurable values live in `pm_config`. Add/edit/remove values in the ⚙️ Config tab.
@@ -264,6 +283,7 @@ All configurable values live in `pm_config`. Add/edit/remove values in the ⚙�
 | `demand_status` | pm_demand.pm_status | Submitted, Triaging, Assessed, PSC Review, Approved, Rejected, Converted | **Yes** |
 | `demand_flow` | pm_demand (workflow) | Defines status progression per VS (pm_name=VS:order, pm_description=status). Last step = Approved (triggers conversion). Flow step count shown in Portfolio. | **Yes** |
 | `user_role` | pm_user.pm_role | Value Stream Owner, Product Owner, Delivery Lead, Business Analyst, Admin, Release Manager, ITSO | **Yes** |
+| `project_checklist` | pm_checkpoint.pm_task | Default: {phase}:{order}→task (24 entries). R&C override: {VS}:{phase}:{order}→task (1 extra) | **Yes** |
 
 ---
 
@@ -378,10 +398,11 @@ Values: `G`, `A`, `R`
 | pm_userstory | 15 |
 | pm_risk | 6 |
 | pm_dependency | 6 |
-| pm_config | 86 entries (20 types) |
+| pm_config | 111 entries (21 types) |
 | pm_demand | 5 |
 | pm_release | 5 |
 | pm_releaseitem | 14 |
-| pm_assignment | 14 |
+| pm_assignment | 15 |
 | pm_user | 8 |
-| **Total** | **~270 records** |
+| pm_checkpoint | 16 |
+| **Total** | **~310 records** |
