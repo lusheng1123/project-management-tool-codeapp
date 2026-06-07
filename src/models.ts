@@ -35,6 +35,9 @@ export const MODELS: Record<string, Model> = {
     { name: 'pm_capabilityid', label: 'Capability', type: 'lookup', target: 'pm_capability' },
     { name: 'pm_projectname', label: 'Project', type: 'lookup', target: 'pm_project' },
     { name: 'pm_status', label: 'Status', type: 'text' },
+    { name: 'pm_priority', label: 'Priority', type: 'text' },
+    { name: 'pm_assignee', label: 'Assignee', type: 'text' },
+    { name: 'pm_target_release', label: 'Target Release', type: 'lookup', target: 'pm_release' },
     { name: 'pm_pscapprovalrequired', label: 'PSC Approval Required', type: 'text' },
     { name: 'pm_pscapprovalstatus', label: 'PSC Approval Status', type: 'text' },
     { name: 'pm_effort', label: 'Effort (days)', type: 'number' }

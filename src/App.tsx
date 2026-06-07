@@ -19,7 +19,7 @@ export { MODELS, getFields, getModelName } from './models'
 export { seedAllIfNeeded } from './seed'
 export { badgeClass } from './context/UIContext'
 
-const ALL_TABS = [{ id: 'dashboard', label: '📊 Dashboard' },{ id: 'portfolio', label: '📈 Portfolio' },{ id: 'demand', label: '📥 Demand' },{ id: 'capabilities', label: '🎯 Capabilities' },{ id: 'products', label: '📦 Products' },{ id: 'projects', label: '📁 Projects' },{ id: 'requirements', label: '📋 Requirements' },{ id: 'epics', label: '⚡ Epics' },{ id: 'stories', label: '📝 Stories' },{ id: 'risks', label: '⚠️ Risks' },{ id: 'dependencies', label: '🔗 Deps' },{ id: 'releases', label: '🚀 Releases' },{ id: 'sprints', label: '📋 Sprints' },{ id: 'governance', label: '✅ Governance' },{ id: 'resources', label: '👥 Resources' },{ id: 'users', label: '👤 Users' },{ id: 'config', label: '⚙️ Config' }]
+const ALL_TABS = [{ id: 'dashboard', label: '📊 Dashboard' },{ id: 'portfolio', label: '📈 Portfolio' },{ id: 'demand', label: '📥 Demand' },{ id: 'capabilities', label: '🎯 Capabilities' },{ id: 'products', label: '📦 Products' },{ id: 'projects', label: '📁 Projects' },{ id: 'requirements', label: '📋 Backlog' },{ id: 'epics', label: '⚡ Epics' },{ id: 'stories', label: '📝 Stories' },{ id: 'risks', label: '⚠️ Risks' },{ id: 'dependencies', label: '🔗 Deps' },{ id: 'releases', label: '🚀 Releases' },{ id: 'sprints', label: '📋 Sprints' },{ id: 'governance', label: '✅ Governance' },{ id: 'resources', label: '👥 Resources' },{ id: 'users', label: '👤 Users' },{ id: 'config', label: '⚙️ Config' }]
 
 const ROLE_OPTIONS = ['Admin','Value Stream Owner','Product Owner','Delivery Lead','Business Analyst','Release Manager','ITSO','Value Stream PMO']
 
