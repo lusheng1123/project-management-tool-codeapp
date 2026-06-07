@@ -99,7 +99,26 @@ Removed in current version. Each user has a single role. `pm_user.pm_valuestream
 
 ## 4. Demand Intake Workflow
 
-### 4.1 Config-Driven Status Progression
+### 4.1 Full Status Lifecycle
+
+```
+                            📥 Save to Backlog
+                                    │
+                                    ▼
+  Submitted → Triaging → Assessed → (PSC Review)   Backlogged ──→ 🔄 Reopen → Submitted
+      │                                              │
+      └──────── ❌ Reject ──────────────────────────┘
+      │
+      └──────── ✅ Approve (final step only) ──→ Convert Modal
+                                                     │
+                                          ┌──────────┴──────────┐
+                                          ▼                     ▼
+                                    Requirement              Backlog
+                                   (linked to project)    (unlinked item)
+                                    demand → hidden       demand → hidden
+```
+
+### 4.2 Config-Driven Status Progression
 
 **File:** `src/views/DemandView.tsx`  
 **Config:** `demand_flow` (pm_config type)
@@ -121,9 +140,9 @@ Submitted → Triaging → Assessed
 Submitted → Triaging → Assessed → PSC Review
 ```
 
-Terminal actions (available at any step): ✅ Approve, 📥 Save to Backlog, ❌ Reject
+Terminal actions (✅ Approve, 📥 Save to Backlog, ❌ Reject) are **only available at the final flow step**.
 
-### 4.2 Change Status UI
+### 4.3 Change Status UI
 
 A "Change Status" button per row opens a popup menu:
 
@@ -146,7 +165,7 @@ Change Status ▾
 
 Terminal actions (Approve, Backlog, Reject) are **only shown at the final flow step**, never alongside flow progression steps. This makes the workflow cleaner and prevents accidental premature termination.
 
-### 4.3 Backlog Action (one-click)
+### 4.4 Backlog Action (one-click)
 
 ```
 Click "Save to Backlog" → creates pm_requirement with:
@@ -169,7 +188,7 @@ const getAvailableStatuses = (demand) => {
 }
 ```
 
-### 4.3 Convert Modal
+### 4.5 Convert Modal
 
 When a user selects "Approved" (the last step), the convert modal opens:
 
@@ -192,11 +211,11 @@ When a user selects "Approved" (the last step), the convert modal opens:
 - Both modes set `pm_converted_to` + `pm_converted_date` on the demand
 - Converted demands are hidden from the demand list (filtered by `pm_status === 'Approved' && pm_converted_to`)
 
-### 4.4 Stats & Filtering
+### 4.6 Stats & Filtering
 
 Stats shown: Active, Submitted, Triaging, Assessed, Pending Conv (Approved-not-yet-converted). Converted and Rejected demands are excluded from the active data set.
 
-### 4.5 badgeClass Mapping
+### 4.7 badgeClass Mapping
 
 **File:** `src/context/UIContext.tsx`
 

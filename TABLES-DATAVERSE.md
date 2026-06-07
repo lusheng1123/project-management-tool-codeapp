@@ -335,14 +335,16 @@ The **✅ Governance** tab shows per-project per-phase checklist. Reads phases f
 
 ### Demand Workflow (demand_flow)
 
-Per-VS config. Values: `Submitted`, `Triaging`, `Assessed`, `PSC Review`, `Approved`
+Per-VS config. Flow values: `Submitted`, `Triaging`, `Assessed`, `PSC Review`. Terminal actions at final step: `Approved`, `Backlogged`, `Rejected`.
 
 | # | Location | What |
 |---|---|---|
-| 1 | DemandView Change Status popup | Next steps from config |
-| 2 | `badgeClass()` | Badge colors |
-| 3 | `openConvert()` in DemandView | Creates `pm_requirement` (Requirement or Backlog based on target) |
-| 4 | Convert modal | Target: Requirement (linked to project) or Backlog (unlinked) |
+| 1 | DemandView Change Status popup | Flow steps at intermediate, terminal actions at final step |
+| 2 | `badgeClass()` | Badge colors (submitted=green, triaging=amber, assessed=blue, psc review=amber, backlogged=blue, rejected=blue) |
+| 3 | `openConvert()` in DemandView | ✅ Approve opens convert modal (Requirement or Backlog target) |
+| 4 | `saveToBacklog()` in DemandView | 📥 One-click creates `pm_requirement` (Prioritized, unlinked) |
+| 5 | `reopenDemand()` in DemandView | 🔄 Backlogged → first flow step (back in active list) |
+| 6 | Convert modal | Target: Requirement (linked to project) or Backlog (unlinked) |
 
 ### Release Workflow (release_status)
 
