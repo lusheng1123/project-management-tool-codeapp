@@ -77,6 +77,12 @@ export function RequirementsView() {
             <td><span className={`badge ${badgeClass(req.pm_status)}`}>{req.pm_status}</span></td>
             <td>{req.pm_pscapprovalrequired === 'Yes' ? <span className={`badge ${badgeClass(req.pm_pscapprovalstatus)}`}>{req.pm_pscapprovalstatus}</span> : <span className="badge badge-gray">N/A</span>}</td>
             <td className="actions-cell" onClick={e => e.stopPropagation()}>
+              {!req.pm_projectname && (
+                <select style={{ padding: '4px 8px', fontSize: '0.72rem', borderRadius: '4px', border: '1px solid var(--primary)', background: 'var(--primary-bg)', color: 'var(--primary-dark)', fontWeight: 600, cursor: 'pointer', maxWidth: '130px' }} value="" onChange={e => { const pid = e.target.value; if (!pid) return; DS.update('pm_requirement', req.id, { pm_projectname: pid, pm_status: 'Linked' }); reload(); showToast('Linked to project!') }}>
+                  <option value="">Link to Project ▾</option>
+                  {projects.map((p: any) => <option key={p.id} value={p.id}>{p.pm_name}</option>)}
+                </select>
+              )}
               <button className="btn-sm btn-edit" onClick={() => openEdit(req.id)}>✏️ Edit</button>
               <button className="btn-sm btn-delete" onClick={() => { if (confirm('Delete?')) { DS.delete('pm_requirement', req.id); reload(); showToast('Deleted!') } }}>🗑️</button>
             </td></tr>

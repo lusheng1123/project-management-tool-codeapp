@@ -87,14 +87,6 @@ export function DemandView() {
     showToast('Demand saved to backlog!')
   }
 
-  const reopenDemand = (demId: string) => {
-    const dem = DS.getById('pm_demand', demId); if (!dem) return
-    const flow = getFlowStatuses(dem.pm_valuestream)
-    const firstStatus = flow[0] || 'Submitted'
-    DS.update('pm_demand', demId, { pm_status: firstStatus })
-    reload(); showToast('Demand reopened!')
-  }
-
   const openConvert = (demId: string) => {
     const dem = DS.getById('pm_demand', demId); if (!dem) return
     const rsConfigs = DS.query('pm_config', { pm_type: 'requirement_status' })
@@ -172,9 +164,6 @@ export function DemandView() {
                     </div>
                   )}
                 </div>
-              )}
-              {isBacklogged && (
-                <button className="btn-sm btn-link" onClick={() => reopenDemand(dem.id)} style={{ color: 'var(--primary)', fontWeight: 600 }}>🔄 Reopen</button>
               )}
               <button className="btn-sm btn-edit" onClick={() => openEdit(dem.id)}>✏️ Edit</button>
               <button className="btn-sm btn-delete" onClick={() => { if (confirm('Delete this demand?')) { DS.delete('pm_demand', dem.id); reload(); showToast('Demand deleted!') } }}>🗑️</button>
