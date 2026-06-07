@@ -21,7 +21,7 @@ export function CheckpointView() {
 
   // Role-based project visibility
   const visibleProjectIds = useMemo(() => {
-    if (hasRole('Admin') || hasRole('Delivery Lead') || hasRole('Release Manager') || hasRole('Product Owner') || hasRole('ITSO')) return null
+    if (hasRole('Admin') || hasRole('Delivery Lead') || hasRole('Release Manager') || hasRole('Product Owner') || hasRole('ITSO') || hasRole('Value Stream PMO')) return null
     if (hasRole('Value Stream Owner')) {
       const vsoUser = DS.getAll('pm_user').find((u: any) => u.pm_role === 'Value Stream Owner' && u.pm_valuestream)
       if (!vsoUser?.pm_valuestream) return new Set<string>()
@@ -37,7 +37,7 @@ export function CheckpointView() {
     return null
   }, [roles, products, projects])
 
-  const canEdit = hasRole('Admin') || hasRole('Delivery Lead') || hasRole('Value Stream Owner') || hasRole('Product Owner') || hasRole('Release Manager')
+  const canEdit = hasRole('Admin') || hasRole('Delivery Lead') || hasRole('Value Stream Owner') || hasRole('Product Owner') || hasRole('Release Manager') || hasRole('Value Stream PMO')
   const { term } = useSearch()
 
   const getPhases = (vsName: string): string[] => {

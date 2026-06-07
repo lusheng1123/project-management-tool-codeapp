@@ -21,14 +21,14 @@ export function DashboardView() {
     if (d.pm_status === 'Rejected' || (d.pm_status === 'Approved' && d.pm_converted_to)) return false
     if (hasRole('Admin')) return true
     if (hasRole('Delivery Lead')) return ['Submitted','Triaging','Approved'].includes(d.pm_status)
-    if (hasRole('Value Stream Owner') || hasRole('Product Owner')) return d.pm_status === 'Assessed'
+    if (hasRole('Value Stream Owner') || hasRole('Product Owner') || hasRole('Value Stream PMO')) return d.pm_status === 'Assessed'
     if (hasRole('Business Analyst')) return d.pm_status === 'Submitted'
     if (hasRole('ITSO')) return ['Assessed','PSC Review'].includes(d.pm_status)
     return false
   })
   const pendingSignoffs = releaseItems.filter((ri: any) => {
     if (ri.pm_signoff_status !== 'Pending') return false
-    if (hasRole('Admin') || hasRole('Product Owner') || hasRole('Value Stream Owner') || hasRole('Release Manager') || hasRole('Delivery Lead')) return true
+    if (hasRole('Admin') || hasRole('Product Owner') || hasRole('Value Stream Owner') || hasRole('Release Manager') || hasRole('Delivery Lead') || hasRole('Value Stream PMO')) return true
     return false
   })
   const activeReleases = releases.filter((r: any) => ['Open', 'In Review'].includes(r.pm_status))

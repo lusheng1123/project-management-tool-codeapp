@@ -7,7 +7,8 @@ const TABS_BY_ROLE: Record<string, string[]> = {
   'Delivery Lead': ['dashboard','portfolio','demand','products','projects','capabilities','requirements','epics','stories','risks','dependencies','releases','sprints','governance','resources','users'],
   'Business Analyst': ['dashboard','portfolio','demand','products','projects','requirements','epics','stories','risks','dependencies','releases','sprints','governance','capabilities'],
   'Release Manager': ['dashboard','portfolio','products','projects','requirements','epics','stories','risks','dependencies','releases','sprints','governance'],
-  ITSO: ['dashboard','portfolio','products','projects','requirements','epics','stories','risks','dependencies','releases','sprints','governance']
+  ITSO: ['dashboard','portfolio','products','projects','requirements','epics','stories','risks','dependencies','releases','sprints','governance'],
+  'Value Stream PMO': ['dashboard','portfolio','demand','products','projects','capabilities','requirements','epics','stories','risks','dependencies','releases','sprints','governance','resources']
 }
 
 export function getAllowedTabs(roles: string[]): string[] {

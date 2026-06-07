@@ -60,7 +60,7 @@ export function SprintView() {
   }, [dataReleases, items])
 
   const visibleProductIds = useMemo(() => {
-    if (hasRole('Admin')) return null
+    if (hasRole('Admin') || hasRole('Value Stream PMO')) return null
     if (hasRole('Value Stream Owner')) {
       const vsoUser = DS.getAll('pm_user').find((u: any) => u.pm_role === 'Value Stream Owner' && u.pm_valuestream)
       if (!vsoUser?.pm_valuestream) return new Set<string>()

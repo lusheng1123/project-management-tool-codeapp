@@ -25,7 +25,7 @@ export function PortfolioView() {
 
   const vsoUser = useMemo(() => {
     if (!hasRole('Value Stream Owner')) return null
-    if (hasRole('Admin')) return null
+    if (hasRole('Admin') || hasRole('Value Stream PMO')) return null
     return DS.getAll('pm_user').find((u: any) => u.pm_role === 'Value Stream Owner' && u.pm_valuestream)
   }, [roles])
 
