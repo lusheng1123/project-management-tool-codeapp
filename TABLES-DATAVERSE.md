@@ -287,7 +287,7 @@ All configurable values live in `pm_config`. Add/edit/remove values in the âš™ï¸
 | `governance_status` | pm_product.pm_governancestatus | Approved, Pending, Rejected, N/A | **Yes** |
 | `priority` | pm_project.pm_priority, pm_requirement.pm_priority | Low, Medium, High, Critical | **Yes** |
 | `rag_status` | pm_epic.pm_ragstatus | G, A, R | **Yes** |
-| `requirement_status` | pm_requirement.pm_status | New, Prioritized, Linked | **Yes** |
+| `requirement_status` | pm_requirement.pm_status | Prioritized (backlog/unlinked), Linked (to project) | **Yes** |
 | `psc_approval_status` | pm_requirement.pm_pscapprovalstatus | Pending, Approved, Rejected, N/A | **Yes** |
 | `signoff_status` | pm_releaseitem.pm_signoff_status | Pending, Approved, Rejected | **Yes** |
 | `resource_status` | pm_resource.pm_status | Active, Inactive, On Leave | **Yes** |
