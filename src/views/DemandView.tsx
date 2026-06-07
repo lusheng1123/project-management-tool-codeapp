@@ -124,7 +124,7 @@ export function DemandView() {
           const available = getAvailableStatuses(dem)
           const isBacklogged = dem.pm_status === 'Backlogged'
           const isTerminal = dem.pm_status === 'Rejected' || (dem.pm_status === 'Approved' && dem.pm_converted_to) || isBacklogged
-          const showDropdown = !isTerminal && available.length > 0
+          const showDropdown = !isTerminal && !(dem.pm_status === 'Approved' && dem.pm_converted_to)
           return (<Fragment key={dem.id}>
             <tr id={`row-${dem.id}`} className={`data-row${isExp ? ' project-row-expanded' : ''} project-main-row`} onClick={() => toggle(dem.id)} style={{ cursor: 'pointer' }}><td><strong>{dem.pm_title}</strong></td><td><span className="badge badge-gray">{dem.pm_type || '—'}</span></td><td><span className={`badge ${badgeClass(dem.pm_priority)}`}>{dem.pm_priority || '—'}</span></td><td><span className={`badge ${badgeClass(dem.pm_status)}`}>{dem.pm_status}</span></td><td>{prod?.pm_name || '—'}</td><td>{vs?.pm_name || '—'}</td><td>{cap?.pm_name || '—'}</td><td className="actions-cell" onClick={e => e.stopPropagation()}>
               {showDropdown && (
@@ -138,7 +138,7 @@ export function DemandView() {
                       background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)',
                       boxShadow: 'var(--shadow-lg)', minWidth: '170px', overflow: 'hidden'
                     }}>
-                      {available.map((s: string) => (
+                      {available.length > 0 && available.map((s: string) => (
                         <div key={s} style={{
                           padding: '8px 14px', fontSize: '0.83rem', cursor: 'pointer', fontWeight: 500,
                           transition: 'background 0.1s'
@@ -147,7 +147,7 @@ export function DemandView() {
                           onMouseLeave={e => (e.currentTarget.style.background = '')}
                         >{s}</div>
                       ))}
-                      <div style={{ borderTop: '1px solid var(--border)' }} />
+                      {available.length > 0 && <div style={{ borderTop: '1px solid var(--border)' }} />}
                       <div style={{
                         padding: '8px 14px', fontSize: '0.83rem', cursor: 'pointer', fontWeight: 600,
                         color: 'var(--green)'
