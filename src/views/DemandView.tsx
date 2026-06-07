@@ -138,7 +138,7 @@ export function DemandView() {
                       background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)',
                       boxShadow: 'var(--shadow-lg)', minWidth: '170px', overflow: 'hidden'
                     }}>
-                      {available.length > 0 && available.map((s: string) => (
+                      {available.length > 0 ? available.map((s: string) => (
                         <div key={s} style={{
                           padding: '8px 14px', fontSize: '0.83rem', cursor: 'pointer', fontWeight: 500,
                           transition: 'background 0.1s'
@@ -146,29 +146,29 @@ export function DemandView() {
                           onMouseEnter={e => (e.currentTarget.style.background = 'var(--primary-bg)')}
                           onMouseLeave={e => (e.currentTarget.style.background = '')}
                         >{s}</div>
-                      ))}
-                      {available.length > 0 && <div style={{ borderTop: '1px solid var(--border)' }} />}
-                      <div style={{
-                        padding: '8px 14px', fontSize: '0.83rem', cursor: 'pointer', fontWeight: 600,
-                        color: 'var(--green)'
-                      }} onClick={(e) => { e.stopPropagation(); handleStatusAction(dem.id, 'Approved') }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--green-bg)')}
-                        onMouseLeave={e => (e.currentTarget.style.background = '')}
-                      >✅ Approve</div>
-                      <div style={{
-                        padding: '8px 14px', fontSize: '0.83rem', cursor: 'pointer', fontWeight: 600,
-                        color: 'var(--blue)'
-                      }} onClick={(e) => { e.stopPropagation(); handleStatusAction(dem.id, 'Backlog') }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--blue-bg)')}
-                        onMouseLeave={e => (e.currentTarget.style.background = '')}
-                      >📥 Save to Backlog</div>
-                      <div style={{
-                        padding: '8px 14px', fontSize: '0.83rem', cursor: 'pointer', fontWeight: 500,
-                        color: 'var(--red)'
-                      }} onClick={(e) => { e.stopPropagation(); handleStatusAction(dem.id, 'Rejected') }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--red-bg)')}
-                        onMouseLeave={e => (e.currentTarget.style.background = '')}
-                      >❌ Reject</div>
+                      )) : (<>
+                        <div style={{
+                          padding: '8px 14px', fontSize: '0.83rem', cursor: 'pointer', fontWeight: 600,
+                          color: 'var(--green)'
+                        }} onClick={(e) => { e.stopPropagation(); handleStatusAction(dem.id, 'Approved') }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'var(--green-bg)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = '')}
+                        >✅ Approve</div>
+                        <div style={{
+                          padding: '8px 14px', fontSize: '0.83rem', cursor: 'pointer', fontWeight: 600,
+                          color: 'var(--blue)'
+                        }} onClick={(e) => { e.stopPropagation(); handleStatusAction(dem.id, 'Backlog') }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'var(--blue-bg)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = '')}
+                        >📥 Save to Backlog</div>
+                        <div style={{
+                          padding: '8px 14px', fontSize: '0.83rem', cursor: 'pointer', fontWeight: 500,
+                          color: 'var(--red)'
+                        }} onClick={(e) => { e.stopPropagation(); handleStatusAction(dem.id, 'Rejected') }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'var(--red-bg)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = '')}
+                        >❌ Reject</div>
+                      </>)}
                     </div>
                   )}
                 </div>
