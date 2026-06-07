@@ -22,14 +22,14 @@ export function DemandView() {
 
   const toggle = (id: string) => { setExpanded(prev => { const s = new Set(prev); if (s.has(id)) s.delete(id); else s.add(id); return s }) }
   const { term } = useSearch()
-  const activeData = data.filter((d: any) => !(d.pm_status === 'Approved' && d.pm_converted_to) && d.pm_status !== 'Converted')
+  const activeData = data.filter((d: any) => !(d.pm_status === 'Approved' && d.pm_converted_to) && !['Backlogged', 'Rejected'].includes(d.pm_status) && d.pm_status !== 'Converted')
   const filtered = term ? activeData.filter((d: any) => Object.values(d).some(v => String(v ?? '').toLowerCase().includes(term.toLowerCase()))) : activeData
 
   const getVSName = (vsId: string) => vsConfigs.find((c: any) => c.id === vsId)?.pm_name || ''
 
   const getFlowStatuses = (vsId: string): string[] => {
     const vsName = getVSName(vsId)
-    if (!vsName) return ['Submitted', 'Triaging', 'Assessed', 'Approved', 'Converted']
+    if (!vsName) return ['Submitted', 'Triaging', 'Assessed']
     return flowConfigs
       .filter((c: any) => c.pm_name.startsWith(vsName + ':'))
       .sort((a: any, b: any) => parseInt(a.pm_name.split(':').pop()) - parseInt(b.pm_name.split(':').pop()))
@@ -45,9 +45,11 @@ export function DemandView() {
 
   const handleStatusAction = useCallback((demId: string, status: string) => {
     setOpenDropdown(null)
-    if (status === 'Approved') openConvert(demId)
-    else if (status === 'Rejected') reject(demId)
+    if (status === 'Approved') { changeStatus(demId, 'Approved'); openConvert(demId) }
+    else if (status === 'Backlog') saveToBacklog(demId)
+    else if (status === 'Rejected') changeStatus(demId, 'Rejected')
     else changeStatus(demId, status)
+    reload()
   }, [])
 
   useEffect(() => {
@@ -74,7 +76,24 @@ export function DemandView() {
   }, [focusId])
 
   const changeStatus = (id: string, newStatus: string) => { DS.update('pm_demand', id, { pm_status: newStatus }); reload(); showToast(`Demand ${newStatus}!`) }
-  const reject = (id: string) => changeStatus(id, 'Rejected')
+
+  const saveToBacklog = (demId: string) => {
+    const dem = DS.getById('pm_demand', demId); if (!dem) return
+    DS.create('pm_requirement', {
+      pm_detail: dem.pm_detail, pm_priority: dem.pm_priority, pm_capabilityid: dem.pm_capability,
+      pm_status: 'Prioritized', pm_effort: 0
+    })
+    DS.update('pm_demand', demId, { pm_status: 'Backlogged' })
+    showToast('Demand saved to backlog!')
+  }
+
+  const reopenDemand = (demId: string) => {
+    const dem = DS.getById('pm_demand', demId); if (!dem) return
+    const flow = getFlowStatuses(dem.pm_valuestream)
+    const firstStatus = flow[0] || 'Submitted'
+    DS.update('pm_demand', demId, { pm_status: firstStatus })
+    reload(); showToast('Demand reopened!')
+  }
 
   const openConvert = (demId: string) => {
     const dem = DS.getById('pm_demand', demId); if (!dem) return
@@ -89,8 +108,8 @@ export function DemandView() {
   const openEdit = (id: string) => {
     const rec = DS.getById('pm_demand', id); if (!rec) return
     const flowStatuses = getFlowStatuses(rec.pm_valuestream)
-    const statusOptions = flowStatuses.length > 0 ? [...flowStatuses, 'Rejected'] : ['Submitted','Triaging','Assessed','Approved','Rejected','Converted']
-    showModal({ title: 'Edit Demand', fields: getFields('pm_demand').filter(f => !['pm_type', 'pm_priority', 'pm_status', 'pm_valuestream', 'pm_capability', 'pm_product', 'pm_converted_to', 'pm_converted_date'].includes(f.name)), data: rec, wide: true, extraContent: (<div><label>Type</label><select id="demType" data-extra defaultValue={rec.pm_type || ''}><option value="">None</option>{dtConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select><label>Priority</label><select id="demPriority" data-extra defaultValue={rec.pm_priority || ''}><option value="">None</option>{prConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select><label>Status</label><select id="demStatus" data-extra defaultValue={rec.pm_status || ''}><option value="">None</option>{statusOptions.map((s: string) => <option key={s} value={s}>{s}</option>)}</select><label>Value Stream</label><select id="demVS" data-extra defaultValue={rec.pm_valuestream || ''}><option value="">None</option>{vsConfigs.map((c: any) => <option key={c.id} value={c.id}>{c.pm_name}</option>)}</select><label>Capability</label><select id="demCap" data-extra defaultValue={rec.pm_capability || ''}><option value="">None</option>{capabilities.map((c: any) => <option key={c.id} value={c.id}>{c.pm_name}</option>)}</select><label>Product</label><select id="demProd" data-extra defaultValue={rec.pm_product || ''}><option value="">None</option>{products.map((p: any) => <option key={p.id} value={p.id}>{p.pm_name}</option>)}</select></div>), onAfterOpen: () => { const vsSel = document.getElementById('demVS') as HTMLSelectElement; vsSel?.addEventListener('change', () => { const newFlow = getFlowStatuses(vsSel.value); const newOpts = newFlow.length > 0 ? [...newFlow, 'Rejected'] : ['Submitted','Triaging','Assessed','Approved','Rejected','Converted']; const statusSel = document.getElementById('demStatus') as HTMLSelectElement; if (!statusSel) return; const curVal = statusSel.value; statusSel.innerHTML = '<option value="">None</option>' + newOpts.map(s => `<option value="${s}" ${s === curVal ? 'selected' : ''}>${s}</option>`).join('') }) }, onSave: (fd) => { fd.pm_type = (document.getElementById('demType') as HTMLSelectElement)?.value || ''; fd.pm_priority = (document.getElementById('demPriority') as HTMLSelectElement)?.value || ''; fd.pm_status = (document.getElementById('demStatus') as HTMLSelectElement)?.value || ''; fd.pm_valuestream = (document.getElementById('demVS') as HTMLSelectElement)?.value || ''; fd.pm_capability = (document.getElementById('demCap') as HTMLSelectElement)?.value || ''; fd.pm_product = (document.getElementById('demProd') as HTMLSelectElement)?.value || ''; DS.update('pm_demand', id, fd); reload(); showToast('Demand updated!') }, onDelete: () => { DS.delete('pm_demand', id); reload(); showToast('Demand deleted!') } })
+    const statusOptions = flowStatuses.length > 0 ? flowStatuses : ['Submitted','Triaging','Assessed']
+    showModal({ title: 'Edit Demand', fields: getFields('pm_demand').filter(f => !['pm_type', 'pm_priority', 'pm_status', 'pm_valuestream', 'pm_capability', 'pm_product', 'pm_converted_to', 'pm_converted_date'].includes(f.name)), data: rec, wide: true, extraContent: (<div><label>Type</label><select id="demType" data-extra defaultValue={rec.pm_type || ''}><option value="">None</option>{dtConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select><label>Priority</label><select id="demPriority" data-extra defaultValue={rec.pm_priority || ''}><option value="">None</option>{prConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select><label>Status</label><select id="demStatus" data-extra defaultValue={rec.pm_status || ''}><option value="">None</option>{statusOptions.map((s: string) => <option key={s} value={s}>{s}</option>)}</select><label>Value Stream</label><select id="demVS" data-extra defaultValue={rec.pm_valuestream || ''}><option value="">None</option>{vsConfigs.map((c: any) => <option key={c.id} value={c.id}>{c.pm_name}</option>)}</select><label>Capability</label><select id="demCap" data-extra defaultValue={rec.pm_capability || ''}><option value="">None</option>{capabilities.map((c: any) => <option key={c.id} value={c.id}>{c.pm_name}</option>)}</select><label>Product</label><select id="demProd" data-extra defaultValue={rec.pm_product || ''}><option value="">None</option>{products.map((p: any) => <option key={p.id} value={p.id}>{p.pm_name}</option>)}</select></div>), onAfterOpen: () => { const vsSel = document.getElementById('demVS') as HTMLSelectElement; vsSel?.addEventListener('change', () => { const newFlow = getFlowStatuses(vsSel.value); const newOpts = newFlow.length > 0 ? newFlow : ['Submitted','Triaging','Assessed']; const statusSel = document.getElementById('demStatus') as HTMLSelectElement; if (!statusSel) return; const curVal = statusSel.value; statusSel.innerHTML = '<option value="">None</option>' + newOpts.map(s => `<option value="${s}" ${s === curVal ? 'selected' : ''}>${s}</option>`).join('') }) }, onSave: (fd) => { fd.pm_type = (document.getElementById('demType') as HTMLSelectElement)?.value || ''; fd.pm_priority = (document.getElementById('demPriority') as HTMLSelectElement)?.value || ''; fd.pm_status = (document.getElementById('demStatus') as HTMLSelectElement)?.value || ''; fd.pm_valuestream = (document.getElementById('demVS') as HTMLSelectElement)?.value || ''; fd.pm_capability = (document.getElementById('demCap') as HTMLSelectElement)?.value || ''; fd.pm_product = (document.getElementById('demProd') as HTMLSelectElement)?.value || ''; DS.update('pm_demand', id, fd); reload(); showToast('Demand updated!') }, onDelete: () => { DS.delete('pm_demand', id); reload(); showToast('Demand deleted!') } })
   }
 
   return (
@@ -103,7 +122,8 @@ export function DemandView() {
         <tbody>{filtered.map((dem: any) => {
           const cap = capabilities.find((c: any) => c.id === dem.pm_capability); const prod = products.find((p: any) => p.id === dem.pm_product); const convertedReq = dem.pm_converted_to ? requirements.find((r: any) => r.id === dem.pm_converted_to) : null; const vs = dem.pm_valuestream ? vsConfigs.find((c: any) => c.id === dem.pm_valuestream) : null; const isExp = expanded.has(dem.id)
           const available = getAvailableStatuses(dem)
-          const isTerminal = dem.pm_status === 'Rejected' || (dem.pm_status === 'Approved' && dem.pm_converted_to)
+          const isBacklogged = dem.pm_status === 'Backlogged'
+          const isTerminal = dem.pm_status === 'Rejected' || (dem.pm_status === 'Approved' && dem.pm_converted_to) || isBacklogged
           const showDropdown = !isTerminal && available.length > 0
           return (<Fragment key={dem.id}>
             <tr id={`row-${dem.id}`} className={`data-row${isExp ? ' project-row-expanded' : ''} project-main-row`} onClick={() => toggle(dem.id)} style={{ cursor: 'pointer' }}><td><strong>{dem.pm_title}</strong></td><td><span className="badge badge-gray">{dem.pm_type || '—'}</span></td><td><span className={`badge ${badgeClass(dem.pm_priority)}`}>{dem.pm_priority || '—'}</span></td><td><span className={`badge ${badgeClass(dem.pm_status)}`}>{dem.pm_status}</span></td><td>{prod?.pm_name || '—'}</td><td>{vs?.pm_name || '—'}</td><td>{cap?.pm_name || '—'}</td><td className="actions-cell" onClick={e => e.stopPropagation()}>
@@ -129,15 +149,32 @@ export function DemandView() {
                       ))}
                       <div style={{ borderTop: '1px solid var(--border)' }} />
                       <div style={{
+                        padding: '8px 14px', fontSize: '0.83rem', cursor: 'pointer', fontWeight: 600,
+                        color: 'var(--green)'
+                      }} onClick={(e) => { e.stopPropagation(); handleStatusAction(dem.id, 'Approved') }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--green-bg)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = '')}
+                      >✅ Approve</div>
+                      <div style={{
+                        padding: '8px 14px', fontSize: '0.83rem', cursor: 'pointer', fontWeight: 600,
+                        color: 'var(--blue)'
+                      }} onClick={(e) => { e.stopPropagation(); handleStatusAction(dem.id, 'Backlog') }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'var(--blue-bg)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = '')}
+                      >📥 Save to Backlog</div>
+                      <div style={{
                         padding: '8px 14px', fontSize: '0.83rem', cursor: 'pointer', fontWeight: 500,
                         color: 'var(--red)'
                       }} onClick={(e) => { e.stopPropagation(); handleStatusAction(dem.id, 'Rejected') }}
                         onMouseEnter={e => (e.currentTarget.style.background = 'var(--red-bg)')}
                         onMouseLeave={e => (e.currentTarget.style.background = '')}
-                      >Rejected</div>
+                      >❌ Reject</div>
                     </div>
                   )}
                 </div>
+              )}
+              {isBacklogged && (
+                <button className="btn-sm btn-link" onClick={() => reopenDemand(dem.id)} style={{ color: 'var(--primary)', fontWeight: 600 }}>🔄 Reopen</button>
               )}
               <button className="btn-sm btn-edit" onClick={() => openEdit(dem.id)}>✏️ Edit</button>
               <button className="btn-sm btn-delete" onClick={() => { if (confirm('Delete this demand?')) { DS.delete('pm_demand', dem.id); reload(); showToast('Demand deleted!') } }}>🗑️</button>

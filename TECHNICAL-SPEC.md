@@ -106,24 +106,33 @@ Removed in current version. Each user has a single role. `pm_user.pm_valuestream
 
 **Format:** `pm_name = '{value_stream}:{order}'`, `pm_description = '{status_name}'`
 
-#### Customer Experience (3 steps)
+#### Customer Experience (2 steps)
 ```
-Submitted → Triaging → Approved
-```
-
-#### Operational Efficiency (4 steps)
-```
-Submitted → Triaging → Assessed → Approved
+Submitted → Triaging
 ```
 
-#### Risk & Compliance (5 steps)
+#### Operational Efficiency (3 steps)
 ```
-Submitted → Triaging → Assessed → PSC Review → Approved
+Submitted → Triaging → Assessed
 ```
+
+#### Risk & Compliance (4 steps)
+```
+Submitted → Triaging → Assessed → PSC Review
+```
+
+Terminal actions (available at any step): ✅ Approve, 📥 Save to Backlog, ❌ Reject
 
 ### 4.2 Change Status UI
 
-A single "Change Status" button per row opens a popup menu listing all valid next statuses from the flow config. The popup is rendered as a positioned div with click-outside-to-close behavior.
+A "Change Status" button per row opens a popup menu with three sections:
+- **Flow steps** — valid next statuses from the flow config
+- **Divider**
+- **✅ Approve** — opens convert modal (Requirement or Backlog), sets demand to 'Approved'
+- **📥 Save to Backlog** — one-click creates backlog `pm_requirement`, sets demand to 'Backlogged'
+- **❌ Reject** — hides demand (sets to 'Rejected')
+
+Backlogged demands show a **🔄 Reopen** button that returns the demand to the first flow step (re-enters active workflow).
 
 ```typescript
 // DemandView.tsx
