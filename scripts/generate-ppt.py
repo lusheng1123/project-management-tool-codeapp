@@ -252,25 +252,42 @@ SLIDES = [
     # === Feature Walkthroughs ===
     {
         "title": "📥 Demand Intake — Workflow",
-        "subtitle": "Configurable per Value Stream",
-        "body": "HOW TO RAISE A DEMAND:\n"
-                "1. Click + Raise Demand on the 📥 Demand tab\n"
-                "2. Fill in Title, Detail, Type, Priority\n"
-                "3. Select Value Stream (determines workflow)\n"
-                "4. Select Product (the app the demand targets)\n"
-                "5. Click Save → status set to first step in VS flow\n\n"
-                "WORKFLOW BY VALUE STREAM:\n"
-                "• Customer Experience: Submitted → Triaging → Approved (3 steps)\n"
-                "• Operational Efficiency: Submitted → Triaging → Assessed → Approved (4 steps)\n"
-                "• Risk & Compliance: Submitted → Triaging → Assessed → PSC Review → Approved (5 steps)\n\n"
-                "CHANGING STATUS:\n"
-                "• Click 'Change Status' button → dropdown shows all next steps from config\n"
-                "• Selecting 'Approved' opens Convert to Requirement modal\n"
-                "• Selecting 'Rejected' immediately rejects the demand\n\n"
-                "⚙️ CONFIG: Edit demand_flow entries in ⚙️ Config tab to add/remove steps",
-        "img": "demand.png",
-        "section": "feature"
-    },
+         "subtitle": "Configurable per Value Stream",
+         "body": "HOW TO RAISE A DEMAND:\n"
+                 "1. Click + Raise Demand on the 📥 Demand tab\n"
+                 "2. Fill in Title, Detail, Type, Priority\n"
+                 "3. Select Value Stream (determines workflow)\n"
+                 "4. Select Product (the app the demand targets)\n"
+                 "5. Click Save → status set to first step in VS flow\n\n"
+                 "WORKFLOW BY VALUE STREAM:\n"
+                 "• Customer Experience: Submitted → Triaging (2 steps)\n"
+                 "• Operational Efficiency: Submitted → Triaging → Assessed (3 steps)\n"
+                 "• Risk & Compliance: Submitted → Triaging → Assessed → PSC Review (4 steps)\n\n"
+                 "⚙️ CONFIG: Edit demand_flow entries in ⚙️ Config tab to add/remove steps",
+         "img": "demand.png",
+         "section": "feature"
+     },
+     {
+         "title": "📥 Demand Status Control",
+         "subtitle": "Flow Steps at Intermediate · Terminal Actions at Final",
+         "body": "INTERMEDIATE STEPS (has next flow step):\n"
+                 "• Popup shows ONLY flow progression options\n"
+                 "• e.g., 'Submitted' shows 'Triaging'\n"
+                 "• Prevents accidental early termination\n\n"
+                 "FINAL FLOW STEP (no more progression):\n"
+                 "• Popup shows ONLY terminal actions:\n\n"
+                 "  ✅ Approve — opens Convert Modal\n"
+                 "     → Can create Requirement (linked) or Backlog (unlinked)\n\n"
+                 "  📥 Save to Backlog — one-click creates backlog item\n"
+                 "     → Demand hidden from active list\n"
+                 "     → Backlogged demands show 🔄 Reopen button\n\n"
+                 "  ❌ Reject — hides demand permanently\n\n"
+                 "REOPEN (Backlogged demands):\n"
+                 "• 🔄 Reopen returns demand to first flow step\n"
+                 "• Demand reappears in active list — can re-enter workflow",
+         "img": "demand.png",
+         "section": "feature"
+     },
     {
         "title": "📋 Sprint Board — Team × Product Grid",
         "subtitle": "Derived from Resource Assignments to Epics",
