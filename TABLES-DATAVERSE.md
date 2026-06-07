@@ -14,7 +14,7 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 | Name | pm_name | Single Line of Text (150) | Yes | |
 | Role | pm_role | Single Line of Text (100) | Yes | |
 | Department | pm_department | Single Line of Text (100) | No | `pm_config` type=`department` |
-| Team | pm_team | Single Line of Text (100) | No | `pm_config` type=`team` |
+| Team | pm_team | Single Line of Text (100) | No | `pm_config` type=`team` — used for Sprint Board team grouping |
 | Email | pm_email | Email (100) | No | |
 | Joined Date | pm_joineddate | Date Only | Yes | |
 | Leave Date | pm_leavedate | Date Only | No | |
@@ -59,18 +59,21 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 
 ---
 
-## 5. pm_requirement (Requirement)
+## 5. pm_requirement (Requirement / Backlog)
 
 | Display Name | Schema Name | Type | Required | Config Source |
 |---|---|---|---|---|
 | Requirement ID | pm_requirementid | Primary Key (GUID) | Auto | |
 | Detail | pm_detail | Multiple Lines of Text (4000) | Yes | |
 | Capability | pm_capabilityid | Lookup → pm_capability | No | |
-| Project | pm_projectname | Lookup → pm_project | No | Product derived from project |
+| Project | pm_projectname | Lookup → pm_project | No | NULL = Backlog item; SET = Linked to project |
+| Priority | pm_priority | Single Line of Text (50) | No | `pm_config` type=`priority` — for backlog ranking |
 | Status | pm_status | Single Line of Text (50) | No | `pm_config` type=`requirement_status` |
 | PSC Approval Required | pm_pscapprovalrequired | Single Line of Text (10) | No | `pm_config` type=`yes_no` |
 | PSC Approval Status | pm_pscapprovalstatus | Single Line of Text (50) | No | `pm_config` type=`psc_approval_status` |
 | Effort | pm_effort | Whole Number | No | Build effort in days |
+
+> **Backlog vs Requirement:** Same table. Backlog = pm_projectname IS NULL. Linked = pm_projectname IS SET. Requirements tab has All/Linked/Backlog mode toggle. Priority column drives backlog ranking.
 
 ---
 
@@ -90,6 +93,7 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 | Priority | pm_priority | Single Line of Text (100) | No | `pm_config` type=`priority` |
 | Scope | pm_scope | Multiple Lines of Text (4000) | No | |
 | Year / Quarter | pm_yearquarter | Single Line of Text (20) | No | |
+| Gov Template | pm_governance_template | Single Line of Text (100) | No | Explicit governance template (VS name). Falls back to product's VS if empty. |
 
 ---
 
@@ -106,7 +110,7 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 ## 8. pm_epic (Epic)
 
 | Display Name | Schema Name | Type | Required | Config Source |
-|---|---|---|---|---|---|
+|---|---|---|---|---|
 | Epic ID | pm_epicid | Primary Key (GUID) | Auto | |
 | Title | pm_title | Single Line of Text (300) | Yes | |
 | Detail | pm_detail | Multiple Lines of Text (4000) | No | |
@@ -116,9 +120,7 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 | Start Date | pm_startdate | Date Only | No | |
 | Release Date | pm_releasedate | Date Only | No | |
 | Completed Date | pm_completeddate | Date Only | No | |
-| RAG Status | pm_ragstatus | Single Line of Text (10) | No | `pm_config` type=`rag_status` |
-
-> Developers assigned via `pm_assignment` table.
+| RAG Status | pm_ragstatus | Single Line of Text (10) | No | `pm_config` type=`rag_status` — G=done (SP counted), A=at risk, R=blocked |
 
 ---
 
@@ -176,10 +178,10 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 | Submitted By | pm_submitted_by | Single Line of Text (100) | No | |
 | Submitted Date | pm_submitted_date | Date Only | No | |
 | Assessment Notes | pm_assessment_notes | Multiple Lines of Text (2000) | No | |
-| Converted To | pm_converted_to | Lookup → pm_requirement | No | |
+| Converted To | pm_converted_to | Lookup → pm_requirement | No | Links to created requirement/backlog |
 | Converted Date | pm_converted_date | Date Only | No | |
 
-> **Workflow:** Submitted → Triaging → Assessed → Approved → Converted. Rejection available from Triaging and Assessed. Workflow buttons in `DemandView.tsx`. Convert action creates `pm_requirement`.
+> **Workflow:** Configurable per value stream via `demand_flow` config. Last step = Approved (triggers convert modal — can create Requirement or Backlog). Rejected always available. Converted demands hidden from list. `DemandView.tsx`.
 
 ---
 
@@ -189,13 +191,13 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 |---|---|---|---|---|
 | Config ID | pm_configid | Primary Key (GUID) | Auto | |
 | Type | pm_type | Single Line of Text (100) | Yes | Category discriminator |
-| Name | pm_name | Single Line of Text (200) | Yes | |
+| Name | pm_name | Single Line of Text (200) | Yes | Format varies by type |
 | Description | pm_description | Single Line of Text (500) | No | |
 | Code Change? | pm_hardcoded | Single Line of Text (10) | No | Yes = value checked in code; No = freely editable |
 
 ---
 
-## 14. pm_release (Release)
+## 14. pm_release (Release/Sprint)
 
 | Display Name | Schema Name | Type | Required | Config Source |
 |---|---|---|---|---|
@@ -244,8 +246,8 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 |---|---|---|---|---|
 | Checkpoint ID | pm_checkpointid | Primary Key (GUID) | Auto | |
 | Project | pm_projectname | Lookup → pm_project | Yes | |
-| Phase | pm_phase | Single Line of Text (100) | Yes | Pipeline phase name |
-| Task | pm_task | Single Line of Text (200) | Yes | From `project_checklist` config |
+| Phase | pm_phase | Single Line of Text (100) | Yes | From configurable `project_phase` |
+| Task | pm_task | Single Line of Text (200) | Yes | From configurable `project_checklist` |
 | Owner | pm_owner | Single Line of Text (100) | No | |
 | Status | pm_status | Single Line of Text (50) | No | To Do, In Progress, Done, N/A |
 | Plan Start | pm_plan_start | Date Only | No | |
@@ -253,7 +255,21 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 | Actual Start | pm_actual_start | Date Only | No | |
 | Actual End | pm_actual_end | Date Only | No | |
 
-> Tasks defined in `project_checklist` config. Format: `pm_name={phase}:{order}`, `pm_description={task}`. VS-specific: `{VS}:{phase}:{order}`.
+> Tasks defined in `project_checklist` config. Phases defined in `project_phase` config. Auto-create on first edit. "Generate N Items" button per project.
+
+---
+
+## 18. pm_user (User)
+
+| Display Name | Schema Name | Type | Required | Config Source |
+|---|---|---|---|---|
+| User ID | pm_userid | Primary Key (GUID) | Auto | |
+| Username | pm_username | Single Line of Text (100) | Yes | |
+| Display Name | pm_displayname | Single Line of Text (200) | Yes | |
+| Role | pm_role | Single Line of Text (100) | No | `pm_config` type=`user_role` |
+| Value Stream | pm_valuestream | Single Line of Text (200) | No | Comma-separated VS IDs for VSO role |
+| Email | pm_email | Email (100) | No | |
+| Status | pm_status | Single Line of Text (50) | No | |
 
 ---
 
@@ -263,13 +279,13 @@ All configurable values live in `pm_config`. Add/edit/remove values in the ⚙�
 
 | Config Type | Used By (Table.Field) | Seed Values | Code Change? |
 |---|---|---|---|
-| `value_stream` | pm_product.pm_valuestream, pm_demand.pm_valuestream | Customer Experience, Operational Efficiency, Risk & Compliance | No |
+| `value_stream` | pm_product.pm_valuestream, pm_demand.pm_valuestream, pm_user.pm_valuestream | Customer Experience, Operational Efficiency, Risk & Compliance | No |
 | `team` | pm_resource.pm_team | Alpha, Beta, Gamma, Delta, Platform, Business | No |
 | `department` | pm_resource.pm_department | IT, Business | No |
 | `enhancement_type` | pm_project.pm_enhancementtype | New Integration, BAU Enhancement | No |
 | `capability_type` | pm_capability.pm_capabilitytype | Functional, Technical, Integration, Infrastructure, Security, Data & Analytics | No |
 | `governance_status` | pm_product.pm_governancestatus | Approved, Pending, Rejected, N/A | **Yes** |
-| `priority` | pm_project.pm_priority | Low, Medium, High, Critical | **Yes** |
+| `priority` | pm_project.pm_priority, pm_requirement.pm_priority | Low, Medium, High, Critical | **Yes** |
 | `rag_status` | pm_epic.pm_ragstatus | G, A, R | **Yes** |
 | `requirement_status` | pm_requirement.pm_status | New, Prioritized, Linked | **Yes** |
 | `psc_approval_status` | pm_requirement.pm_pscapprovalstatus | Pending, Approved, Rejected, N/A | **Yes** |
@@ -280,10 +296,10 @@ All configurable values live in `pm_config`. Add/edit/remove values in the ⚙�
 | `yes_no` | pm_requirement.pm_pscapprovalrequired | Yes, No | **Yes** |
 | `tool` | pm_releaseitem.pm_tool | Jira, Azure DevOps, GitHub, ServiceNow, Jenkins | No |
 | `demand_type` | pm_demand.pm_type | Feature, Bug, Enhancement, Tech Debt | No |
-| `demand_status` | pm_demand.pm_status | Submitted, Triaging, Assessed, PSC Review, Approved, Rejected, Converted | **Yes** |
-| `demand_flow` | pm_demand (workflow) | Defines status progression per VS (pm_name=VS:order, pm_description=status). Last step = Approved (triggers conversion). Flow step count shown in Portfolio. | **Yes** |
-| `user_role` | pm_user.pm_role | Value Stream Owner, Product Owner, Delivery Lead, Business Analyst, Admin, Release Manager, ITSO | **Yes** |
-| `project_checklist` | pm_checkpoint.pm_task | Default: {phase}:{order}→task (24 entries). R&C override: {VS}:{phase}:{order}→task (1 extra) | **Yes** |
+| `demand_flow` | pm_demand (workflow) | Per-VS status progression. Format: pm_name=VS:order, pm_description=status. Last step = Approved (triggers conversion to Requirement/Backlog). | **Yes** |
+| `user_role` | pm_user.pm_role | Value Stream Owner, Product Owner, Delivery Lead, Business Analyst, Admin, Release Manager, ITSO, Value Stream PMO | **Yes** |
+| `project_checklist` | pm_checkpoint.pm_task | Per-VS per-phase task definitions. Format: pm_name={VS}:{phase}:{order}, pm_description={task}. Falls back to default without VS prefix. 54 entries. | **Yes** |
+| `project_phase` | pm_checkpoint.pm_phase | Per-VS pipeline phase definitions. Format: pm_name={VS}:{order}, pm_description={phase}. Default uses `_:` prefix. 22 entries across 4 templates. | **Yes** |
 
 ---
 
@@ -301,25 +317,32 @@ The **📈 Portfolio** tab shows a holistic view of the entire portfolio grouped
 | Teams involved | `pm_assignment` → `pm_resource.pm_team` via epics |
 | Flow steps | `demand_flow` config count per VS |
 
-> **Yes** = values matched in `badgeClass()` or view logic. Renaming breaks colors/behavior. Adding new values gets `badge-gray` (safe default). **No** = pure labels, freely editable.
+---
+
+## Sprint Board
+
+The **📋 Sprints** tab shows a Team × Product grid (teams as rows, products as columns). Teams derived from resource assignments → epics. Sprint cards show name, status, story count, signoff progress, and completed/total SP. Filter toggle: show/hide completed sprints.
+
+---
+
+## Governance View
+
+The **✅ Governance** tab shows per-project per-phase checklist. Reads phases from `project_phase` config and tasks from `project_checklist` config. All items editable — auto-creates checkpoint records on first edit. "Generate N Items" button per project. UAC: VSO sees only assigned VS projects, BA sees demand-linked projects. Edit gated (DL/Admin/VSO/PO/RM can edit; BA/ITSO read-only).
 
 ---
 
 ## Embedded Code Logic (Code Change Required to Modify)
 
-These status values drive workflow behavior beyond badge coloring:
+### Demand Workflow (demand_flow)
 
-### Pipeline Stages (project_status)
-
-Values: `Onboarding`, `Development Phase 1`, `Development Phase 2`, `Review`, `Live`
+Per-VS config. Values: `Submitted`, `Triaging`, `Assessed`, `PSC Review`, `Approved`
 
 | # | Location | What |
 |---|---|---|
-| 1 | `STAGES` array | Stage names and order |
-| 2 | `STAGE_COLORS` map | Per-stage color mapping |
-| 3 | `.pipeline-*` CSS | Header/card colors |
-| 4 | `badgeClass()` | Badge colors |
-| 5 | `PipelineBoard` | Board rendering |
+| 1 | DemandView Change Status popup | Next steps from config |
+| 2 | `badgeClass()` | Badge colors |
+| 3 | `openConvert()` in DemandView | Creates `pm_requirement` (Requirement or Backlog based on target) |
+| 4 | Convert modal | Target: Requirement (linked to project) or Backlog (unlinked) |
 
 ### Release Workflow (release_status)
 
@@ -330,16 +353,6 @@ Values: `Draft`, `Open`, `In Review`, `Released`
 | 1 | ReleasesView buttons | Conditional rendering per status |
 | 2 | `badgeClass()` | Badge colors |
 
-### Demand Workflow (demand_flow)
-
-Values: `Submitted`, `Triaging`, `Assessed`, `Approved`, `Rejected`, `Converted`
-
-| # | Location | What |
-|---|---|---|
-| 1 | DemandView workflow buttons | Conditional rendering per status (Start Triage, Assess, Approve, Convert, Reject) |
-| 2 | `badgeClass()` | Badge colors (Submitted=green, Triaging=amber, Assessed=blue, Approved=green, Rejected=blue, Converted=green) |
-| 3 | `openConvert()` in DemandView | Creates `pm_requirement` with populated fields, sets `pm_converted_to` + `pm_converted_date` |
-
 ### RAG Status (rag_status)
 
 Values: `G`, `A`, `R`
@@ -347,9 +360,7 @@ Values: `G`, `A`, `R`
 | # | Location | What |
 |---|---|---|
 | 1 | `badgeClass()` | Badge colors for G/A/R |
-| 2 | EpicsView expansion | `epic.pm_ragstatus === 'G' ? ...` |
-| 3 | RequirementsView expansion | Same pattern |
-| 4 | ProjectsView expansion | Same pattern |
+| 2 | Portfolio SP calculation | G = completed SP |
 
 ---
 
@@ -367,19 +378,15 @@ Values: `G`, `A`, `R`
 | pm_project | pm_requirement | pm_projectname |
 | pm_project | pm_control | pm_projectname |
 | pm_project | pm_epic | pm_projectname |
-| pm_project | pm_control | pm_projectname |
+| pm_project | pm_checkpoint | pm_projectname |
 | pm_product | pm_risk | pm_productname |
 | pm_product | pm_dependency | pm_productname |
 | pm_requirement | pm_risk | pm_requirementid |
 | pm_requirement | pm_dependency | pm_requirementid |
 | pm_epic | pm_userstory | pm_epicid |
-| pm_risk | pm_dependency | pm_riskid |
-| pm_dependency | pm_demand | pm_riskid |
-| pm_capability | pm_demand | pm_capability |
-| pm_product | pm_demand | pm_product |
-| pm_demand | pm_requirement | pm_converted_to |
 | pm_release | pm_releaseitem | pm_release |
 | pm_userstory | pm_releaseitem | pm_userstory |
+| pm_demand | pm_requirement | pm_converted_to |
 
 ---
 
@@ -391,18 +398,18 @@ Values: `G`, `A`, `R`
 | pm_capability | 6 |
 | pm_product | 6 |
 | pm_capabilityproduct | 9 |
-| pm_requirement | 8 |
+| pm_requirement | 11 |
 | pm_project | 6 |
 | pm_control | 4 |
-| pm_epic | 6 |
-| pm_userstory | 15 |
+| pm_epic | 7 |
+| pm_userstory | 16 |
 | pm_risk | 6 |
 | pm_dependency | 6 |
-| pm_config | 111 entries (21 types) |
+| pm_config | ~120 entries (22 types) |
 | pm_demand | 5 |
 | pm_release | 5 |
 | pm_releaseitem | 14 |
 | pm_assignment | 15 |
-| pm_user | 8 |
-| pm_checkpoint | 16 |
-| **Total** | **~310 records** |
+| pm_user | 9 |
+| pm_checkpoint | 24 |
+| **Total** | **~330 records** |
