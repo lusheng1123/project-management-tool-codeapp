@@ -181,7 +181,7 @@ Created from `src/App.tsx` MODELS definition. Use these to create tables when de
 | Converted To | pm_converted_to | Lookup → pm_requirement | No | Links to created requirement/backlog |
 | Converted Date | pm_converted_date | Date Only | No | |
 
-> **Workflow:** Per-VS flow steps (config-driven). Terminal actions: ✅ Approve (opens convert modal), 📥 Save to Backlog (one-click), ❌ Reject. Backlogged demands can be 🔄 Reopened. Converted/Backlogged/Rejected demands hidden from active list. `DemandView.tsx`.
+> **Workflow:** Per-VS flow steps (config-driven). Terminal actions (✅ Approve, 📥 Save to Backlog, ❌ Reject) only shown at the final flow step. Backlogged demands get 🔄 Reopen. Converted/Backlogged/Rejected hidden from active list. `DemandView.tsx`.
 
 ---
 
@@ -296,7 +296,7 @@ All configurable values live in `pm_config`. Add/edit/remove values in the ⚙�
 | `yes_no` | pm_requirement.pm_pscapprovalrequired | Yes, No | **Yes** |
 | `tool` | pm_releaseitem.pm_tool | Jira, Azure DevOps, GitHub, ServiceNow, Jenkins | No |
 | `demand_type` | pm_demand.pm_type | Feature, Bug, Enhancement, Tech Debt | No |
-| `demand_flow` | pm_demand (workflow) | Per-VS status progression. Format: pm_name=VS:order, pm_description=status. Terminal actions (Approve, Backlog, Reject) always available — not in flow config. | **Yes** |
+| `demand_flow` | pm_demand (workflow) | Per-VS flow steps. Format: pm_name=VS:order, pm_description=status. Terminal actions only at final step. | **Yes** |
 | `user_role` | pm_user.pm_role | Value Stream Owner, Product Owner, Delivery Lead, Business Analyst, Admin, Release Manager, ITSO, Value Stream PMO | **Yes** |
 | `project_checklist` | pm_checkpoint.pm_task | Per-VS per-phase task definitions. Format: pm_name={VS}:{phase}:{order}, pm_description={task}. Falls back to default without VS prefix. 54 entries. | **Yes** |
 | `project_phase` | pm_checkpoint.pm_phase | Per-VS pipeline phase definitions. Format: pm_name={VS}:{order}, pm_description={phase}. Default uses `_:` prefix. 22 entries across 4 templates. | **Yes** |

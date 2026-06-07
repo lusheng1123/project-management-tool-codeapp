@@ -125,14 +125,40 @@ Terminal actions (available at any step): ✅ Approve, 📥 Save to Backlog, ❌
 
 ### 4.2 Change Status UI
 
-A "Change Status" button per row opens a popup menu with three sections:
-- **Flow steps** — valid next statuses from the flow config
-- **Divider**
-- **✅ Approve** — opens convert modal (Requirement or Backlog), sets demand to 'Approved'
-- **📥 Save to Backlog** — one-click creates backlog `pm_requirement`, sets demand to 'Backlogged'
-- **❌ Reject** — hides demand (sets to 'Rejected')
+A "Change Status" button per row opens a popup menu:
 
-Backlogged demands show a **🔄 Reopen** button that returns the demand to the first flow step (re-enters active workflow).
+**At intermediate steps** (has next flow step):
+```
+Change Status ▾
+───────────────
+Triaging          ← next flow step
+Assessed          ← optional (if more steps)
+```
+
+**At final flow step** (no progression remaining):
+```
+Change Status ▾
+───────────────
+✅ Approve         ← opens convert modal (Requirement or Backlog)
+📥 Save to Backlog ← one-click creates backlog pm_requirement
+❌ Reject          ← hides demand
+```
+
+Terminal actions (Approve, Backlog, Reject) are **only shown at the final flow step**, never alongside flow progression steps. This makes the workflow cleaner and prevents accidental premature termination.
+
+### 4.3 Backlog Action (one-click)
+
+```
+Click "Save to Backlog" → creates pm_requirement with:
+  pm_detail = demand.pm_detail
+  pm_status = 'Prioritized'
+  pm_projectname = NULL
+  pm_priority = demand.pm_priority
+  pm_capabilityid = demand.pm_capability
+→ demand status → 'Backlogged' (hidden from active list)
+```
+
+Backlogged demands show a **🔄 Reopen** button that returns them to the first flow step (`flow[0]`), re-entering the active workflow.
 
 ```typescript
 // DemandView.tsx
