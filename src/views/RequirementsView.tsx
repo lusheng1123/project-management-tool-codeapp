@@ -10,7 +10,7 @@ import { EmptyState } from '../components/EmptyState'
 export function RequirementsView() {
   const [data, setData] = useState<any[]>([]); const [expanded, setExpanded] = useState<Set<string>>(new Set()); const [key, setKey] = useState(0); const reload = () => setKey(k => k + 1); const { showToast, showModal } = useUI()
   useEffect(() => { setData(DS.getAll('pm_requirement')) }, [key])
-  const capabilities = useMemo(() => DS.getAll('pm_capability'), [key]); const projects = useMemo(() => DS.getAll('pm_project'), [key]); const epics = useMemo(() => DS.getAll('pm_epic'), [key]); const assignments = useMemo(() => DS.getAll('pm_assignment'), [key]); const releases = useMemo(() => DS.getAll('pm_release'), [key]); const prConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'priority' }), [key])
+  const capabilities = useMemo(() => DS.getAll('pm_capability'), [key]); const projects = useMemo(() => DS.getAll('pm_project'), [key]); const products = useMemo(() => DS.getAll('pm_product'), [key]); const epics = useMemo(() => DS.getAll('pm_epic'), [key]); const assignments = useMemo(() => DS.getAll('pm_assignment'), [key]); const releases = useMemo(() => DS.getAll('pm_release'), [key]); const prConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'priority' }), [key])
   const toggle = (id: string) => { setExpanded(prev => { const s = new Set(prev); if (s.has(id)) s.delete(id); else s.add(id); return s }) }
   const { term } = useSearch(); const filtered = term ? data.filter((r: any) => Object.values(r).some(v => String(v ?? '').toLowerCase().includes(term.toLowerCase()))) : data
 
@@ -26,7 +26,8 @@ export function RequirementsView() {
       <label>Target Release</label><select id="reqTargetRel" data-extra defaultValue={rec?.pm_target_release || ''}><option value="">None</option>{releases.map((r: any) => <option key={r.id} value={r.id}>{r.pm_releasename}</option>)}</select>
       <label>PSC Approval Required</label><select id="reqPSCReq" data-extra defaultValue={rec?.pm_pscapprovalrequired || ''}><option value="">None</option>{ynConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select>
       <label>PSC Approval Status</label><select id="reqPSC" data-extra defaultValue={rec?.pm_pscapprovalstatus || ''}><option value="">None</option>{psConfigs.map((c: any) => <option key={c.id} value={c.pm_name}>{c.pm_name}</option>)}</select>
-      <label>Project</label><select id="reqProject" data-extra defaultValue={rec?.pm_projectname || ''}><option value="">None</option>{projects.map((p: any) => <option key={p.id} value={p.id}>{p.pm_name}</option>)}</select>
+      <label>Project</label><select id="reqProject" data-extra defaultValue={rec?.pm_projectname || ''}><option value="">None (Backlog)</option>{projects.map((p: any) => <option key={p.id} value={p.id}>{p.pm_name}</option>)}</select>
+      <label>Product</label><select id="reqProduct" data-extra defaultValue={rec?.pm_productname || ''}><option value="">None</option>{products.map((p: any) => <option key={p.id} value={p.id}>{p.pm_name}</option>)}</select>
     </div>)
   }
 
@@ -38,20 +39,21 @@ export function RequirementsView() {
     pm_target_release: (document.getElementById('reqTargetRel') as HTMLSelectElement)?.value || '',
     pm_pscapprovalrequired: (document.getElementById('reqPSCReq') as HTMLSelectElement)?.value || '',
     pm_pscapprovalstatus: (document.getElementById('reqPSC') as HTMLSelectElement)?.value || '',
-    pm_projectname: (document.getElementById('reqProject') as HTMLSelectElement)?.value || ''
+    pm_projectname: (document.getElementById('reqProject') as HTMLSelectElement)?.value || '',
+    pm_productname: (document.getElementById('reqProduct') as HTMLSelectElement)?.value || ''
   })
 
   const openEditReq = (id: string) => {
     const rec = DS.getById('pm_requirement', id); if (!rec) return
-    showModal({ title: 'Edit Backlog Item', fields: getFields('pm_requirement').filter(f => !['pm_capabilityid', 'pm_projectname', 'pm_status', 'pm_priority', 'pm_assignee', 'pm_target_release', 'pm_pscapprovalstatus', 'pm_pscapprovalrequired'].includes(f.name)), data: rec, extraContent: modalExtra(rec), onSave: (fd) => { Object.assign(fd, collectExtras()); DS.update('pm_requirement', id, fd); reload(); showToast('Updated!') }, onDelete: () => { DS.delete('pm_requirement', id); reload(); showToast('Deleted!') } })
+    showModal({ title: 'Edit Backlog Item', fields: getFields('pm_requirement').filter(f => !['pm_capabilityid', 'pm_projectname', 'pm_productname', 'pm_status', 'pm_priority', 'pm_assignee', 'pm_target_release', 'pm_pscapprovalstatus', 'pm_pscapprovalrequired'].includes(f.name)), data: rec, extraContent: modalExtra(rec), onSave: (fd) => { Object.assign(fd, collectExtras()); DS.update('pm_requirement', id, fd); reload(); showToast('Updated!') }, onDelete: () => { DS.delete('pm_requirement', id); reload(); showToast('Deleted!') } })
   }
 
-  const backlogItems = data.filter((r: any) => !r.pm_projectname)
+  const backlogItems = data.filter((r: any) => r.pm_productname && !r.pm_projectname)
   const linkedItems = data.filter((r: any) => r.pm_projectname)
 
   return (
     <div>
-      <div className="dashboard-header"><h2>📋 Backlog</h2><button className="btn btn-primary" onClick={() => { showModal({ title: 'New Backlog Item', fields: getFields('pm_requirement').filter(f => !['pm_capabilityid', 'pm_projectname', 'pm_status', 'pm_priority', 'pm_assignee', 'pm_target_release', 'pm_pscapprovalstatus', 'pm_pscapprovalrequired'].includes(f.name)), extraContent: modalExtra(null), onSave: (fd) => { Object.assign(fd, collectExtras()); DS.create('pm_requirement', fd); reload(); showToast('Created!') } }) }}>+ New Item</button></div>
+      <div className="dashboard-header"><h2>📋 Backlog</h2><button className="btn btn-primary" onClick={() => {     showModal({ title: 'New Backlog Item', fields: getFields('pm_requirement').filter(f => !['pm_capabilityid', 'pm_projectname', 'pm_productname', 'pm_status', 'pm_priority', 'pm_assignee', 'pm_target_release', 'pm_pscapprovalstatus', 'pm_pscapprovalrequired'].includes(f.name)), extraContent: modalExtra(null), onSave: (fd) => { Object.assign(fd, collectExtras()); DS.create('pm_requirement', fd); reload(); showToast('Created!') } }) }}>+ New Item</button></div>
       <StatsCards stats={[
         { value: data.length, label: 'Total Items' },
         { value: backlogItems.length, label: 'Unlinked' },
@@ -60,13 +62,14 @@ export function RequirementsView() {
       ]} />
       <SearchBar />
       {!filtered.length ? <EmptyState msg="No backlog items found" /> : (
-        <table className="data-table"><thead><tr><th>Detail</th><th>Priority</th><th>Assignee</th><th>Target Rel</th><th>Project</th><th>Effort</th><th>Status</th><th>Actions</th></tr></thead>
+        <table className="data-table"><thead><tr><th>Detail</th><th>Product</th><th>Priority</th><th>Assignee</th><th>Target Rel</th><th>Project</th><th>Effort</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>{filtered.map((req: any) => {
-          const proj = projects.find((p: any) => p.id === req.pm_projectname); const reqEpics = req.pm_projectname ? epics.filter((e: any) => e.pm_projectname === req.pm_projectname) : []; const isExp = expanded.has(req.id); const targetRel = req.pm_target_release ? releases.find((r: any) => r.id === req.pm_target_release) : null
+          const proj = projects.find((p: any) => p.id === req.pm_projectname); const prod = req.pm_productname ? products.find((p: any) => p.id === req.pm_productname) : null; const reqEpics = req.pm_projectname ? epics.filter((e: any) => e.pm_projectname === req.pm_projectname) : []; const isExp = expanded.has(req.id); const targetRel = req.pm_target_release ? releases.find((r: any) => r.id === req.pm_target_release) : null
           return (
           <Fragment key={req.id}>
           <tr className={`data-row${isExp ? ' project-row-expanded' : ''} project-main-row`} onClick={() => toggle(req.id)} style={{ cursor: 'pointer' }}>
             <td>{req.pm_detail?.substring(0, 70)}{req.pm_detail?.length > 70 ? '...' : ''}</td>
+            <td>{prod?.pm_name || '—'}</td>
             <td><span className={`badge ${badgeClass(req.pm_priority)}`} style={{ fontSize: '0.7rem' }}>{req.pm_priority || '—'}</span></td>
             <td>{req.pm_assignee || '—'}</td>
             <td>{targetRel?.pm_releasename || '—'}</td>

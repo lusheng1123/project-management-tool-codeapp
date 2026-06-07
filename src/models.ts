@@ -34,6 +34,7 @@ export const MODELS: Record<string, Model> = {
     { name: 'pm_detail', label: 'Requirement Detail', type: 'multiline', required: true },
     { name: 'pm_capabilityid', label: 'Capability', type: 'lookup', target: 'pm_capability' },
     { name: 'pm_projectname', label: 'Project', type: 'lookup', target: 'pm_project' },
+    { name: 'pm_productname', label: 'Product', type: 'lookup', target: 'pm_product' },
     { name: 'pm_status', label: 'Status', type: 'text' },
     { name: 'pm_priority', label: 'Priority', type: 'text' },
     { name: 'pm_assignee', label: 'Assignee', type: 'text' },
