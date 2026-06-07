@@ -123,7 +123,7 @@ describe('seedAllIfNeeded', () => {
     expect(DS.getAll('pm_capability')).toHaveLength(6)
     expect(DS.getAll('pm_product')).toHaveLength(6)
     expect(DS.getAll('pm_capabilityproduct').length).toBeGreaterThan(0)
-    expect(DS.getAll('pm_requirement')).toHaveLength(8)
+    expect(DS.getAll('pm_requirement')).toHaveLength(11)
     expect(DS.getAll('pm_project')).toHaveLength(6)
     expect(DS.getAll('pm_control').length).toBeGreaterThan(0)
     expect(DS.getAll('pm_epic')).toHaveLength(7)
