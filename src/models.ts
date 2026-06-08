@@ -151,6 +151,11 @@ export const MODELS: Record<string, Model> = {
       { name: 'pm_valuestream', label: 'Value Stream', type: 'text' },
       { name: 'pm_email', label: 'Email', type: 'email' },
       { name: 'pm_status', label: 'Status', type: 'text' }
+    ]},
+   pm_test: { name: 'Test', fields: [
+      { name: 'PMT_name', label: 'Name', type: 'text', required: true },
+      { name: 'PMT_value', label: 'Value', type: 'text' },
+      { name: 'PMT_status', label: 'Status', type: 'text' }
     ]}
 }
 

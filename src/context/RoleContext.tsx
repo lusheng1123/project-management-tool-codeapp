@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from 'react'
 
 const TABS_BY_ROLE: Record<string, string[]> = {
-  Admin: ['dashboard','portfolio','demand','capabilities','products','projects','requirements','epics','stories','risks','dependencies','releases','sprints','governance','resources','users','config'],
+  Admin: ['dashboard','portfolio','demand','capabilities','products','projects','requirements','epics','stories','risks','dependencies','releases','sprints','governance','resources','users','test','config'],
   'Value Stream Owner': ['dashboard','portfolio','demand','products','projects','capabilities','requirements','epics','stories','risks','dependencies','releases','sprints','governance'],
   'Product Owner': ['dashboard','portfolio','demand','products','projects','requirements','epics','stories','risks','dependencies','releases','sprints','governance'],
   'Delivery Lead': ['dashboard','portfolio','demand','products','projects','capabilities','requirements','epics','stories','risks','dependencies','releases','sprints','governance','resources','users'],
