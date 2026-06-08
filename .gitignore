@@ -11,8 +11,6 @@ node_modules
 dist
 dist-ssr
 *.local
-*.tsbuildinfo
-node_modules/.tmp/
 
 # Editor directories and files
 .vscode/*
