@@ -119,8 +119,7 @@ SLIDES = [
                 "• 👤 Users: Create/Edit/Delete users, assign roles\n"
                 "• ⚙️ Config: Add/edit/remove configuration entries\n\n"
                 "DASHBOARD: All pending items across every entity",
-        "img": None,
-        "section": "role"
+        "img": "users.png",       "section": "role"
     },
     # ── 7: Value Stream PMO ──
     {
@@ -213,8 +212,7 @@ SLIDES = [
                 "• 👥 Resources: Full CRUD\n"
                 "• 👤 Users: Can manage users and their roles\n\n"
                 "DASHBOARD: Demands to Triage/Assess/Convert + Pending Signoffs",
-        "img": None,
-        "section": "role"
+        "img": "demand.png",       "section": "role"
     },
     # ── 11: Business Analyst ──
     {
@@ -237,8 +235,7 @@ SLIDES = [
                 "• All other views: READ-ONLY\n\n"
                 "DASHBOARD: Submitted demands only\n"
                 "SPRINT BOARD: Only shows products linked to their demands",
-        "img": None,
-        "section": "role"
+        "img": "governance.png",       "section": "role"
     },
     # ── 12: Release Manager ──
     {
@@ -302,8 +299,7 @@ SLIDES = [
                 "• Each role sees different action items (see Slide 5)\n"
                 "• Items auto-navigate to the relevant view for deeper action\n\n"
                 "ACCESS: All 8 roles",
-        "img": None,
-        "section": "feature"
+        "img": "dashboard.png",       "section": "feature"
     },
     # ── 15: Portfolio ──
     {
@@ -324,8 +320,7 @@ SLIDES = [
                 "• VSO: only their assigned value stream products\n"
                 "• All others: full view\n\n"
                 "Click any card → navigates to Products tab",
-        "img": None,
-        "section": "feature"
+        "img": "portfolio.png",       "section": "feature"
     },
     # ── 16: Demand Intake ──
     {
@@ -346,8 +341,7 @@ SLIDES = [
                 "• Intermediate steps: popup shows only flow progression options\n"
                 "• Final step: popup shows ✅ Approve, 📥 Backlog, ❌ Reject\n\n"
                 "⚙️ CONFIG: Edit demand_flow entries in Config tab",
-        "img": None,
-        "section": "feature"
+        "img": "demand.png",       "section": "feature"
     },
     # ── 17: Demand Workflow Diagram ──
     {
@@ -393,8 +387,7 @@ SLIDES = [
                 "• Projects are linked to products (pm_productname)\n"
                 "• Governance templates auto-detect from product's VS\n\n"
                 "ACCESS: All 8 roles (editing limited by role permissions)",
-        "img": None,
-        "section": "feature"
+        "img": "products.png",       "section": "feature"
     },
     # ── 19: Projects ──
     {
@@ -454,8 +447,7 @@ SLIDES = [
                 "• Resource Assignments target epics\n"
                 "  (team membership derived from assignment→resource→team)\n\n"
                 "ACCESS: All roles (except RM/ITSO cannot edit)",
-        "img": None,
-        "section": "feature"
+        "img": "epics.png",       "section": "feature"
     },
     # ── 22: User Stories ──
     {
@@ -492,8 +484,7 @@ SLIDES = [
                 "• Risk counts shown on Portfolio product cards\n"
                 "• Project rows show risk count in Related column\n\n"
                 "ACCESS: All roles (edit restricted by role permissions)",
-        "img": None,
-        "section": "feature"
+        "img": "risks.png",       "section": "feature"
     },
     # ── 24: Dependencies ──
     {
@@ -529,8 +520,7 @@ SLIDES = [
                 "• Signoff recorded with by/date metadata\n\n"
                 "Click any row → expands epics → expands stories\n\n"
                 "ACCESS: All roles (edit restricted)",
-        "img": None,
-        "section": "feature"
+        "img": "releases.png",       "section": "feature"
     },
     # ── 26: Sprint Board ──
     {
@@ -552,8 +542,7 @@ SLIDES = [
                 "• VSO: sees only their VS products\n"
                 "• BA: sees only products with active demands\n\n"
                 "Click card → navigates to Releases tab with auto-expand",
-        "img": None,
-        "section": "feature"
+        "img": "sprints.png",       "section": "feature"
     },
     # ── 27: Governance ──
     {
@@ -574,8 +563,7 @@ SLIDES = [
                 "• Project dropdown + Phase dropdown + Search bar\n\n"
                 "ROLE: VSO sees only their VS projects; BA sees demand-linked\n"
                 "  projects; edit restricted to Admin/DL/VSO/PO/RM/VSPMO",
-        "img": None,
-        "section": "feature"
+        "img": "governance.png",       "section": "feature"
     },
     # ── 28: Resources ──
     {
@@ -616,8 +604,7 @@ SLIDES = [
                 "• Persisted in localStorage\n"
                 "• Tab visibility and edit permissions change accordingly\n\n"
                 "ACCESS: Admin, DL",
-        "img": None,
-        "section": "feature"
+        "img": "users.png",       "section": "feature"
     },
     # ── 30: Config Tab ──
     {
@@ -640,8 +627,7 @@ SLIDES = [
                 "• Add/remove governance phases and checklist items\n\n"
                 "💡 Changes take effect immediately — no code changes needed\n\n"
                 "ACCESS: Admin only",
-        "img": None,
-        "section": "feature"
+        "img": "config.png",       "section": "feature"
     },
     # ── 31: Lock & Unlink ──
     {
@@ -772,6 +758,14 @@ def add_body(slide, text, left=0.8, top=1.5, width=11.7, height=5.5, size=13):
     p.font.size = Pt(size)
     p.font.color.rgb = DARK
     p.line_spacing = Pt(size + 6)
+
+def add_image_left_body_right(slide, img_name, text, size=12):
+    img_path = os.path.join(screenshot_dir, img_name)
+    if os.path.exists(img_path):
+        slide.shapes.add_picture(img_path, Inches(0.3), Inches(1.35), Inches(7.5), Inches(5.8))
+        add_body(slide, text, left=8.0, top=1.35, width=5.0, height=5.8, size=size)
+    else:
+        add_body(slide, text, left=0.8, top=1.5, width=11.7, height=5.5, size=14)
 
 def add_rounded_box(slide, left, top, width, height, text, fill_color, font_color=None, font_size=11):
     shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(left), Inches(top), Inches(width), Inches(height))
@@ -946,10 +940,18 @@ for i, slide_data in enumerate(SLIDES):
 
     if section == "role":
         add_top_bar(slide, slide_data["title"], subtitle)
-        add_body(slide, slide_data.get("body", ""))
+        img = slide_data.get("img")
+        if img:
+            add_image_left_body_right(slide, img, slide_data.get("body", ""))
+        else:
+            add_body(slide, slide_data.get("body", ""))
     elif section == "feature":
         add_top_bar(slide, slide_data["title"], subtitle)
-        add_body(slide, slide_data.get("body", ""))
+        img = slide_data.get("img")
+        if img:
+            add_image_left_body_right(slide, img, slide_data.get("body", ""))
+        else:
+            add_body(slide, slide_data.get("body", ""))
     elif section == "diagram":
         add_top_bar(slide, slide_data["title"], subtitle)
         draw_workflow_diagram(slide)

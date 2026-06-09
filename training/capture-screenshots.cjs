@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 
 const OUTPUT_DIR = path.join(__dirname, 'screenshots');
-const BASE_URL = 'http://localhost:5173';
+const BASE_URL = 'http://localhost:5174';
 
 const SHOTS = [
   { name: 'dashboard', label: 'Dashboard', action: null },
