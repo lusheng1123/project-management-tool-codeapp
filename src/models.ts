@@ -154,9 +154,9 @@ export const MODELS: Record<string, Model> = {
       { name: 'pm_status', label: 'Status', type: 'text' }
     ]},
    pm_test: { name: 'Test', fields: [
-      { name: 'cr506_pmt_pm_test', label: 'Name', type: 'text', required: true },
-      { name: 'cr506_pmt_value', label: 'Value', type: 'text' },
-      { name: 'cr506_pmt_status', label: 'Status', type: 'text' }
+      { name: 'cr506_PMT_pm_test1', label: 'Name', type: 'text', required: true },
+      { name: 'cr506_PMT_value', label: 'Value', type: 'text' },
+      { name: 'cr506_PMT_status', label: 'Status', type: 'text' }
     ]}
 }
 
