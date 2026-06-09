@@ -3,8 +3,13 @@ import { StatsCards } from '../components/StatsCards'
 
 const TABLE_NAME = 'cr506_pmt_pm_test1s'
 const API_BASE = '/api/data/v9.2'
-const PK_FIELD = 'cr506_pmt_pm_test1id'
 const FIELDS = { name: 'cr506_pmt_pm_test', value: 'cr506_pmt_value', status: 'cr506_pmt_status' }
+
+const getId = (r: any) => {
+  const link = r['@odata.editLink'] || r['@odata.id'] || ''
+  const m = link.match(/\(([^)]+)\)/)
+  return m ? m[1] : r.cr506_pmt_pm_test1id || r.id || ''
+}
 
 export function TestView() {
   const [records, setRecords] = useState<any[]>([])
@@ -76,7 +81,7 @@ export function TestView() {
 
       <div className="card" style={{ padding: '16px', marginBottom: '16px' }}>
         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '10px' }}>
-          Table: <strong>{TABLE_NAME}</strong> · ID: <code>{PK_FIELD}</code> · API: <code>{API_BASE}/{TABLE_NAME}</code>
+          Table: <strong>{TABLE_NAME}</strong> · API: <code>{API_BASE}/{TABLE_NAME}</code>
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <button className="btn btn-primary" onClick={fetchAll} disabled={loading}>
@@ -120,13 +125,13 @@ export function TestView() {
           <thead><tr><th>ID</th><th>Name</th><th>Value</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
             {records.map((r: any) => (
-              <tr key={r[PK_FIELD] || r.id} className="data-row">
-                <td style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{(r[PK_FIELD] || r.id || '').substring(0, 8)}...</td>
+              <tr key={getId(r)} className="data-row">
+                <td style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{getId(r).substring(0, 8)}...</td>
                 <td><strong>{r[FIELDS.name] || '—'}</strong></td>
                 <td>{r[FIELDS.value] || '—'}</td>
                 <td><span className="badge badge-green">{r[FIELDS.status] || '—'}</span></td>
                 <td className="actions-cell">
-                  <button className="btn-sm btn-delete" onClick={() => deleteRecord(r[PK_FIELD] || r.id)}>🗑️</button>
+                  <button className="btn-sm btn-delete" onClick={() => deleteRecord(getId(r))}>🗑️</button>
                 </td>
               </tr>
             ))}
