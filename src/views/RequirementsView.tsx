@@ -3,12 +3,13 @@ import { DS } from '../data'
 import { getFields } from '../models'
 import { useUI, badgeClass } from '../context/UIContext'
 import { useSearch } from '../context/SearchContext'
+import { useRole } from '../context/RoleContext'
 import { StatsCards } from '../components/StatsCards'
 import { SearchBar } from '../components/SearchBar'
 import { EmptyState } from '../components/EmptyState'
 
 export function RequirementsView() {
-  const [data, setData] = useState<any[]>([]); const [expanded, setExpanded] = useState<Set<string>>(new Set()); const [mode, setMode] = useState<'all'|'linked'|'backlog'>('all'); const [key, setKey] = useState(0); const reload = () => setKey(k => k + 1); const { showToast, showModal } = useUI()
+  const [data, setData] = useState<any[]>([]); const [expanded, setExpanded] = useState<Set<string>>(new Set()); const [mode, setMode] = useState<'all'|'linked'|'backlog'>('all'); const [key, setKey] = useState(0); const reload = () => setKey(k => k + 1); const { showToast, showModal } = useUI(); const { hasRole } = useRole()
   useEffect(() => { setData(DS.getAll('pm_requirement')) }, [key])
   const capabilities = useMemo(() => DS.getAll('pm_capability'), [key]); const projects = useMemo(() => DS.getAll('pm_project'), [key]); const products = useMemo(() => DS.getAll('pm_product'), [key]); const epics = useMemo(() => DS.getAll('pm_epic'), [key]); const assignments = useMemo(() => DS.getAll('pm_assignment'), [key]); const prConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'priority' }), [key]); const rsConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'requirement_status' }), [key]); const ynConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'yes_no' }), [key]); const psConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'psc_approval_status' }), [key])
   const toggle = (id: string) => { setExpanded(prev => { const s = new Set(prev); if (s.has(id)) s.delete(id); else s.add(id); return s }) }
@@ -83,7 +84,7 @@ export function RequirementsView() {
 {projects.filter((p: any) => p.pm_locked !== 'Yes').map((p: any) => <option key={p.id} value={p.id}>{p.pm_name}</option>)}
                 </select>
               )}
-              {req.pm_projectname && <button className="btn-sm" style={{ padding: '3px 8px', fontSize: '0.7rem', fontWeight: 600, background: 'var(--blue-bg)', color: 'var(--blue)', border: '1px solid var(--blue)', borderRadius: '4px', cursor: 'pointer' }} onClick={() => { if (confirm('Move this requirement back to Backlog?')) { DS.update('pm_requirement', req.id, { pm_projectname: '', pm_status: 'Prioritized' }); reload(); showToast('Moved to Backlog!') } }}>📦 Backlog</button>}
+              {(hasRole('Admin') || hasRole('Value Stream PMO') || hasRole('Value Stream Owner')) && req.pm_projectname && <button className="btn-sm" style={{ padding: '3px 8px', fontSize: '0.7rem', fontWeight: 600, background: 'var(--blue-bg)', color: 'var(--blue)', border: '1px solid var(--blue)', borderRadius: '4px', cursor: 'pointer' }} onClick={() => { if (confirm('Move this requirement back to Backlog?')) { DS.update('pm_requirement', req.id, { pm_projectname: '', pm_status: 'Prioritized' }); reload(); showToast('Moved to Backlog!') } }}>📦 Backlog</button>}
               <button className="btn-sm btn-edit" onClick={() => { if (proj?.pm_locked === 'Yes') { showToast('🔒 Project is locked — cannot edit'); return }; openEdit(req.id) }}>✏️ Edit</button>
               <button className="btn-sm btn-delete" onClick={() => { if (confirm('Delete?')) { DS.delete('pm_requirement', req.id); reload(); showToast('Deleted!') } }}>🗑️</button>
             </td></tr>
