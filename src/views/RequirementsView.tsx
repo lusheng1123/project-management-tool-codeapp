@@ -71,7 +71,7 @@ export function RequirementsView() {
           <tr className={`data-row${isExp ? ' project-row-expanded' : ''} project-main-row`} onClick={() => toggle(req.id)} style={{ cursor: 'pointer' }}>
             <td>{req.pm_detail?.substring(0, 70)}{req.pm_detail?.length > 70 ? '...' : ''}</td>
             <td><span className={`badge ${badgeClass(req.pm_priority)}`} style={{ fontSize: '0.7rem' }}>{req.pm_priority || '—'}</span></td>
-            <td>{proj?.pm_name || <span style={{ color: 'var(--text-soft)', fontStyle: 'italic' }}>Backlog</span>}</td>
+            <td>{proj ? <>{proj.pm_locked === 'Yes' ? '🔒 ' : ''}{proj.pm_name}</> : <span style={{ color: 'var(--text-soft)', fontStyle: 'italic' }}>Backlog</span>}</td>
             <td>{prod?.pm_name || '—'}</td>
             <td><span style={{ fontWeight: 600 }}>{req.pm_effort || '—'}d</span></td>
             <td><span className={`badge ${badgeClass(req.pm_status)}`}>{req.pm_status}</span></td>
@@ -80,10 +80,11 @@ export function RequirementsView() {
               {!req.pm_projectname && (
                 <select style={{ padding: '4px 8px', fontSize: '0.72rem', borderRadius: '4px', border: '1px solid var(--primary)', background: 'var(--primary-bg)', color: 'var(--primary-dark)', fontWeight: 600, cursor: 'pointer', maxWidth: '130px' }} value="" onChange={e => { const pid = e.target.value; if (!pid) return; DS.update('pm_requirement', req.id, { pm_projectname: pid, pm_status: 'Linked' }); reload(); showToast('Linked to project!') }}>
                   <option value="">Link to Project ▾</option>
-                  {projects.map((p: any) => <option key={p.id} value={p.id}>{p.pm_name}</option>)}
+{projects.filter((p: any) => p.pm_locked !== 'Yes').map((p: any) => <option key={p.id} value={p.id}>{p.pm_name}</option>)}
                 </select>
               )}
-              <button className="btn-sm btn-edit" onClick={() => openEdit(req.id)}>✏️ Edit</button>
+              {req.pm_projectname && <button className="btn-sm" style={{ padding: '3px 8px', fontSize: '0.7rem', fontWeight: 600, background: 'var(--blue-bg)', color: 'var(--blue)', border: '1px solid var(--blue)', borderRadius: '4px', cursor: 'pointer' }} onClick={() => { if (confirm('Move this requirement back to Backlog?')) { DS.update('pm_requirement', req.id, { pm_projectname: '', pm_status: 'Prioritized' }); reload(); showToast('Moved to Backlog!') } }}>📦 Backlog</button>}
+              <button className="btn-sm btn-edit" onClick={() => { if (proj?.pm_locked === 'Yes') { showToast('🔒 Project is locked — cannot edit'); return }; openEdit(req.id) }}>✏️ Edit</button>
               <button className="btn-sm btn-delete" onClick={() => { if (confirm('Delete?')) { DS.delete('pm_requirement', req.id); reload(); showToast('Deleted!') } }}>🗑️</button>
             </td></tr>
           {isExp && reqEpics.length > 0 && reqEpics.map((e: any) => { const rag = e.pm_ragstatus === 'G' ? 'badge-green' : e.pm_ragstatus === 'A' ? 'badge-amber' : 'badge-red'; const epicAssigns = assignments.filter((a: any) => a.pm_epic === e.id); const devNames = epicAssigns.map((a: any) => DS.getResourceName(a.pm_resource)).join(', ') || '—'; return (<tr key={e.id} className="project-epic-row"><td colSpan={8}><div className="project-epic-item"><span className={`badge ${rag}`}>{e.pm_ragstatus || '—'}</span><span className="project-epic-name">{e.pm_title}</span><span className="project-epic-meta">Est: {e.pm_estimatedeffort || '—'}d | {e.pm_startdate || '?'} → {e.pm_releasedate || '?'}</span><span className="project-epic-devs">{devNames}</span></div></td></tr>) })}
