@@ -14,6 +14,5 @@ import { createLocalStorageService } from './localStorage'
 // For now, localStorage is always used so nothing breaks.
 
 export { createLocalStorageService, genId } from './localStorage'
-export { createDataverseService } from './dataverse'
 
 export const DS = createLocalStorageService()
