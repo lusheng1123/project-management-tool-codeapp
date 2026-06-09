@@ -2,9 +2,10 @@
 """Generate Training PPT — roles + per-page functionality walkthroughs"""
 
 from pptx import Presentation
-from pptx.util import Inches, Pt
+from pptx.util import Inches, Pt, Emu
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
+from pptx.enum.shapes import MSO_SHAPE, MSO_CONNECTOR_TYPE
 import os
 
 SLIDES = [
@@ -348,7 +349,15 @@ SLIDES = [
         "img": None,
         "section": "feature"
     },
-    # ── 17: Capabilities ──
+    # ── 17: Demand Workflow Diagram ──
+    {
+        "title": "📥 Demand Workflow Diagram",
+        "subtitle": "Flow steps → terminal actions → convert",
+        "body": "",
+        "img": None,
+        "section": "diagram"
+    },
+    # ── 18: Capabilities ──
     {
         "title": "🎯 Capabilities",
         "subtitle": "Business capability catalog",
@@ -764,6 +773,150 @@ def add_body(slide, text, left=0.8, top=1.5, width=11.7, height=5.5, size=13):
     p.font.color.rgb = DARK
     p.line_spacing = Pt(size + 6)
 
+def add_rounded_box(slide, left, top, width, height, text, fill_color, font_color=None, font_size=11):
+    shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(left), Inches(top), Inches(width), Inches(height))
+    shape.fill.solid()
+    shape.fill.fore_color.rgb = fill_color
+    shape.line.fill.background()
+    tf = shape.text_frame
+    tf.word_wrap = True
+    tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+    p = tf.paragraphs[0]
+    p.text = text
+    p.font.size = Pt(font_size)
+    p.font.bold = True
+    p.font.color.rgb = font_color or WHITE
+    shape.text_frame.margin_top = Emu(0)
+    shape.text_frame.margin_bottom = Emu(0)
+    return shape
+
+def add_arrow(slide, left, top, width=0.5, height=0.25, color=None):
+    if color is None:
+        color = RGBColor(100, 116, 139)
+    arrow = slide.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, Inches(left), Inches(top), Inches(width), Inches(height))
+    arrow.fill.solid()
+    arrow.fill.fore_color.rgb = color
+    arrow.line.fill.background()
+    return arrow
+
+def add_down_arrow(slide, left, top, width=0.25, height=0.4, color=None):
+    if color is None:
+        color = RGBColor(100, 116, 139)
+    arrow = slide.shapes.add_shape(MSO_SHAPE.DOWN_ARROW, Inches(left), Inches(top), Inches(width), Inches(height))
+    arrow.fill.solid()
+    arrow.fill.fore_color.rgb = color
+    arrow.line.fill.background()
+    return arrow
+
+def draw_workflow_diagram(slide):
+    FLOW = RGBColor(99, 102, 241)
+    GREEN = RGBColor(34, 197, 94)
+    AMBER = RGBColor(234, 179, 8)
+    RED = RGBColor(239, 68, 68)
+    PURPLE = RGBColor(139, 92, 246)
+    GRAY = RGBColor(100, 116, 139)
+    LG = RGBColor(148, 163, 184)
+    BG = RGBColor(248, 250, 252)
+
+    bg = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(0.3), Inches(1.3), Inches(12.7), Inches(5.8))
+    bg.fill.solid(); bg.fill.fore_color.rgb = BG
+    bg.line.color.rgb = LG; bg.line.width = Pt(1)
+
+    b = (lambda s, l, t, w, h, fc, fs=11: add_rounded_box(slide, l, t, w, h, s, fc, font_size=fs))
+
+    # Legend
+    tx = slide.shapes.add_textbox(Inches(0.5), Inches(1.4), Inches(2), Inches(0.25))
+    tx.text_frame.paragraphs[0].text = "Workflow Patterns by Value Stream"
+    tx.text_frame.paragraphs[0].font.size = Pt(12)
+    tx.text_frame.paragraphs[0].font.bold = True
+    tx.text_frame.paragraphs[0].font.color.rgb = GRAY
+
+    # ── Customer Experience (2 steps) ──
+    tx = slide.shapes.add_textbox(Inches(0.5), Inches(1.75), Inches(5), Inches(0.25))
+    tx.text_frame.paragraphs[0].text = "Customer Experience  (2 steps)"
+    tx.text_frame.paragraphs[0].font.size = Pt(10)
+    tx.text_frame.paragraphs[0].font.color.rgb = GRAY
+    y = 2.05
+    b("Submitted", 0.5, y, 1.3, 0.4, FLOW)
+    add_arrow(slide, 1.9, y + 0.08, 0.4, 0.24)
+    b("Triaging", 2.4, y, 1.3, 0.4, FLOW)
+    add_down_arrow(slide, 2.95, y + 0.42, 0.2, 0.3, GRAY)
+    tx = slide.shapes.add_textbox(Inches(2.55), Inches(y + 0.75), Inches(1.5), Inches(0.2))
+    tx.text_frame.paragraphs[0].text = "Terminal >>"
+    tx.text_frame.paragraphs[0].font.size = Pt(7)
+    tx.text_frame.paragraphs[0].font.color.rgb = GRAY
+    tx.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
+
+    # ── Operational Efficiency (3 steps) ──
+    tx = slide.shapes.add_textbox(Inches(0.5), Inches(2.6), Inches(5), Inches(0.25))
+    tx.text_frame.paragraphs[0].text = "Operational Efficiency  (3 steps)"
+    tx.text_frame.paragraphs[0].font.size = Pt(10)
+    tx.text_frame.paragraphs[0].font.color.rgb = GRAY
+    y = 2.9
+    b("Submitted", 0.5, y, 1.3, 0.4, FLOW)
+    add_arrow(slide, 1.9, y + 0.08, 0.4, 0.24)
+    b("Triaging", 2.4, y, 1.3, 0.4, FLOW)
+    add_arrow(slide, 3.8, y + 0.08, 0.4, 0.24)
+    b("Assessed", 4.3, y, 1.3, 0.4, FLOW)
+    add_down_arrow(slide, 4.85, y + 0.42, 0.2, 0.3, GRAY)
+    tx = slide.shapes.add_textbox(Inches(4.45), Inches(y + 0.75), Inches(1.5), Inches(0.2))
+    tx.text_frame.paragraphs[0].text = "Terminal >>"
+    tx.text_frame.paragraphs[0].font.size = Pt(7)
+    tx.text_frame.paragraphs[0].font.color.rgb = GRAY
+    tx.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
+
+    # ── Risk & Compliance (4 steps) ──
+    tx = slide.shapes.add_textbox(Inches(0.5), Inches(3.45), Inches(5), Inches(0.25))
+    tx.text_frame.paragraphs[0].text = "Risk & Compliance  (4 steps)"
+    tx.text_frame.paragraphs[0].font.size = Pt(10)
+    tx.text_frame.paragraphs[0].font.color.rgb = GRAY
+    y = 3.75
+    b("Submitted", 0.5, y, 1.3, 0.4, FLOW)
+    add_arrow(slide, 1.9, y + 0.08, 0.4, 0.24)
+    b("Triaging", 2.4, y, 1.3, 0.4, FLOW)
+    add_arrow(slide, 3.8, y + 0.08, 0.4, 0.24)
+    b("Assessed", 4.3, y, 1.3, 0.4, FLOW)
+    add_arrow(slide, 5.7, y + 0.08, 0.4, 0.24)
+    b("PSC Review", 6.2, y, 1.3, 0.4, FLOW)
+    add_down_arrow(slide, 6.75, y + 0.42, 0.2, 0.3, GRAY)
+    tx = slide.shapes.add_textbox(Inches(6.35), Inches(y + 0.75), Inches(1.5), Inches(0.2))
+    tx.text_frame.paragraphs[0].text = "Terminal >>"
+    tx.text_frame.paragraphs[0].font.size = Pt(7)
+    tx.text_frame.paragraphs[0].font.color.rgb = GRAY
+    tx.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
+
+    # ── Terminal Actions ──
+    ty = 1.65
+    b("✅ Approve", 8.0, ty, 1.5, 0.55, GREEN)
+    b("📥 Backlog", 8.0, ty + 0.75, 1.5, 0.55, AMBER)
+    b("❌ Reject", 8.0, ty + 1.5, 1.5, 0.55, RED)
+
+    # Convert path
+    add_down_arrow(slide, 8.65, ty + 0.58, 0.2, 0.15, GREEN)
+    b("Convert\nModal", 8.0, ty + 2.4, 1.5, 0.8, PURPLE, 9)
+    tx = slide.shapes.add_textbox(Inches(8.0), Inches(ty + 3.25), Inches(1.5), Inches(0.5))
+    tf = tx.text_frame; tf.word_wrap = True
+    tf.paragraphs[0].text = "Requirement (linked)\nor Backlog (unlinked)"
+    tf.paragraphs[0].font.size = Pt(8)
+    tf.paragraphs[0].font.color.rgb = GRAY
+    tf.paragraphs[0].alignment = PP_ALIGN.CENTER
+
+    # ── Legend Box ──
+    lx, ly = 0.5, 5.0
+    b("Flow Step", lx, ly, 0.7, 0.25, FLOW, 8)
+    b("Approve", lx + 0.85, ly, 0.7, 0.25, GREEN, 8)
+    b("Backlog", lx + 1.7, ly, 0.7, 0.25, AMBER, 8)
+    b("Reject", lx + 2.55, ly, 0.7, 0.25, RED, 8)
+    b("Convert", lx + 3.4, ly, 0.7, 0.25, PURPLE, 8)
+    tx = slide.shapes.add_textbox(Inches(0.5), Inches(5.35), Inches(11), Inches(0.8))
+    tf = tx.text_frame; tf.word_wrap = True
+    tf.paragraphs[0].text = ("💡 At intermediate steps: only flow progression options shown.\n"
+                             "At the FINAL step: terminal actions appear (Approved / Backlog / Reject).\n"
+                             "Convert creates a Requirement (linked to project) or Backlog item (unlinked).")
+    tf.paragraphs[0].font.size = Pt(10)
+    tf.paragraphs[0].font.color.rgb = GRAY
+    tf.paragraphs[0].line_spacing = Pt(16)
+
 TOTAL = len(SLIDES)
 
 for i, slide_data in enumerate(SLIDES):
@@ -797,6 +950,9 @@ for i, slide_data in enumerate(SLIDES):
     elif section == "feature":
         add_top_bar(slide, slide_data["title"], subtitle)
         add_body(slide, slide_data.get("body", ""))
+    elif section == "diagram":
+        add_top_bar(slide, slide_data["title"], subtitle)
+        draw_workflow_diagram(slide)
     elif section == "qa":
         add_top_bar(slide, slide_data["title"], subtitle if subtitle else None)
         add_body(slide, slide_data.get("body", ""), left=0.5, top=1.5, width=12.3, height=5.5, size=18)
