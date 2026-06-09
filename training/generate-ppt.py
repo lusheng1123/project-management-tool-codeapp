@@ -725,7 +725,7 @@ prs.slide_width = Inches(13.333)
 prs.slide_height = Inches(7.5)
 BLANK_LAYOUT = prs.slide_layouts[6]
 
-screenshot_dir = os.path.join(os.path.dirname(__file__), 'training-screenshots')
+screenshot_dir = os.path.join(os.path.dirname(__file__), 'screenshots')
 
 def add_slide_number(slide, num, total):
     box = slide.shapes.add_textbox(Inches(12.2), Inches(0.85), Inches(0.8), Inches(0.3))
@@ -969,7 +969,7 @@ for i, slide_data in enumerate(SLIDES):
     add_slide_number(slide, i + 1, TOTAL)
     add_footer(slide)
 
-output_path = os.path.join(os.path.dirname(__file__), '..', 'Training-PM-Tool.pptx')
+output_path = os.path.join(os.path.dirname(__file__), 'Training-PM-Tool.pptx')
 prs.save(output_path)
 print(f"PPT saved: {output_path}")
 print(f"Total slides: {len(SLIDES)}")

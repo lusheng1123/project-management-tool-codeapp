@@ -3,7 +3,7 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 
-const OUTPUT_DIR = path.join(__dirname, '..', 'training-screenshots');
+const OUTPUT_DIR = path.join(__dirname, 'screenshots');
 const BASE_URL = 'http://localhost:5173';
 
 const SHOTS = [
