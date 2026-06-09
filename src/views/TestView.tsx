@@ -4,7 +4,7 @@ import { StatsCards } from '../components/StatsCards'
 const TABLE_NAME = 'cr506_pmt_pm_test1s'
 const API_BASE = '/api/data/v9.2'
 const PK_FIELD = 'cr506_pmt_pm_test1id'
-const FIELDS = { name: 'cr506_pmt_name', value: 'cr506_pmt_value', status: 'cr506_pmt_status' }
+const FIELDS = { name: 'cr506_pmt_pm_test', value: 'cr506_pmt_value', status: 'cr506_pmt_status' }
 
 export function TestView() {
   const [records, setRecords] = useState<any[]>([])
