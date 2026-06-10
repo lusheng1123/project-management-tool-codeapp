@@ -1,23 +1,29 @@
 import './App.css'
+import { lazy, Suspense, useEffect } from 'react'
 import { SearchProvider } from './context/SearchContext'
 import { UIProvider } from './context/UIContext'
 import { NavigationProvider, useNavigation } from './context/NavigationContext'
 import { RoleProvider, useRole, getAllowedTabs } from './context/RoleContext'
-import { seedAllIfNeeded } from './seed'
-import {
-  DashboardView, PortfolioView, ResourcesView, CapabilitiesView, ProductsView, RequirementsView,
-  ProjectsView, EpicsView, UserStoriesView, RisksView,
-  DependenciesView, ReleasesView, SprintView, CheckpointView, DemandView, ConfigView, UsersView, TestView
-} from './views'
 
-// Seed data on module load
-seedAllIfNeeded()
-
-// Re-exports for backward compat (tests, etc.)
-export { DS, genId } from './data'
-export { MODELS, getFields, getModelName } from './models'
-export { seedAllIfNeeded } from './seed'
-export { badgeClass } from './context/UIContext'
+// Lazy views — each chunk loads only when tab is clicked
+const DashboardView = lazy(() => import('./views/DashboardView').then(m => ({ default: m.DashboardView })))
+const PortfolioView = lazy(() => import('./views/PortfolioView').then(m => ({ default: m.PortfolioView })))
+const ResourcesView = lazy(() => import('./views/ResourcesView').then(m => ({ default: m.ResourcesView })))
+const CapabilitiesView = lazy(() => import('./views/CapabilitiesView').then(m => ({ default: m.CapabilitiesView })))
+const ProductsView = lazy(() => import('./views/ProductsView').then(m => ({ default: m.ProductsView })))
+const RequirementsView = lazy(() => import('./views/RequirementsView').then(m => ({ default: m.RequirementsView })))
+const ProjectsView = lazy(() => import('./views/ProjectsView').then(m => ({ default: m.ProjectsView })))
+const EpicsView = lazy(() => import('./views/EpicsView').then(m => ({ default: m.EpicsView })))
+const UserStoriesView = lazy(() => import('./views/UserStoriesView').then(m => ({ default: m.UserStoriesView })))
+const RisksView = lazy(() => import('./views/RisksView').then(m => ({ default: m.RisksView })))
+const DependenciesView = lazy(() => import('./views/DependenciesView').then(m => ({ default: m.DependenciesView })))
+const ReleasesView = lazy(() => import('./views/ReleasesView').then(m => ({ default: m.ReleasesView })))
+const SprintView = lazy(() => import('./views/SprintView').then(m => ({ default: m.SprintView })))
+const CheckpointView = lazy(() => import('./views/CheckpointView').then(m => ({ default: m.CheckpointView })))
+const DemandView = lazy(() => import('./views/DemandView').then(m => ({ default: m.DemandView })))
+const ConfigView = lazy(() => import('./views/ConfigView').then(m => ({ default: m.ConfigView })))
+const UsersView = lazy(() => import('./views/UsersView').then(m => ({ default: m.UsersView })))
+const TestView = lazy(() => import('./views/TestView').then(m => ({ default: m.TestView })))
 
 const ALL_TABS = [{ id: 'dashboard', label: '📊 Dashboard' },{ id: 'portfolio', label: '📈 Portfolio' },{ id: 'demand', label: '📥 Demand' },{ id: 'capabilities', label: '🎯 Capabilities' },{ id: 'products', label: '📦 Products' },{ id: 'projects', label: '📁 Projects' },{ id: 'requirements', label: '📋 Requirements' },{ id: 'epics', label: '⚡ Epics' },{ id: 'stories', label: '📝 Stories' },{ id: 'risks', label: '⚠️ Risks' },{ id: 'dependencies', label: '🔗 Deps' },{ id: 'releases', label: '🚀 Releases' },{ id: 'sprints', label: '📋 Sprints' },{ id: 'governance', label: '✅ Governance' },{ id: 'resources', label: '👥 Resources' },{ id: 'users', label: '👤 Users' },{ id: 'test', label: '🧪 Test' },{ id: 'config', label: '⚙️ Config' }]
 
@@ -28,12 +34,15 @@ function App() {
   const { roles, roleName, setRole } = useRole()
   const allowedIds = getAllowedTabs(roles)
   const visibleTabs = ALL_TABS.filter(t => allowedIds.includes(t.id))
-  const handleReset = () => { if (!confirm('Reset all data?')) return; localStorage.clear(); seedAllIfNeeded(); window.location.reload() }
+  const handleReset = () => { if (!confirm('Reset all data?')) return; localStorage.clear(); window.location.reload() }
+
+  // Seed data async — leaves the main entry chunk
+  useEffect(() => { import('./seed').then(m => m.seedAllIfNeeded()) }, [])
+
   const renderTab = () => { switch (tab) { case 'dashboard': return <DashboardView />; case 'portfolio': return <PortfolioView />; case 'resources': return <ResourcesView />; case 'products': return <ProductsView />; case 'projects': return <ProjectsView />; case 'capabilities': return <CapabilitiesView />; case 'requirements': return <RequirementsView />; case 'demand': return <DemandView />; case 'epics': return <EpicsView />; case 'stories': return <UserStoriesView />; case 'risks': return <RisksView />; case 'dependencies': return <DependenciesView />; case 'releases': return <ReleasesView />; case 'sprints': return <SprintView />; case 'governance': return <CheckpointView />; case 'users': return <UsersView />; case 'test': return <TestView />; case 'config': return <ConfigView />; default: return <DashboardView /> } }
-  return (<div className="app-root"><header className="app-header"><h1>Project Management Tool</h1><span className="badge-mode mode-dev">DEV</span><span className="badge badge-blue" style={{ marginLeft: 8, fontSize: '0.7rem', padding: '2px 8px' }}>{roleName}</span><button className="btn-sm btn-reset" onClick={handleReset} style={{ marginLeft: 'auto' }}>🔄 Reset</button></header><div style={{ padding: '8px 28px', background: 'var(--border-light)', borderBottom: '1px solid var(--border)', display: 'flex', gap: 8, alignItems: 'center', fontSize: '0.8rem' }}><span style={{ color: 'var(--text-muted)' }}>Role:</span><select value={roleName} onChange={e => setRole(e.target.value)} style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', fontSize: '0.8rem' }}>{ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}</select></div><nav className="tab-nav">{visibleTabs.map(t => (<button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''}`} onClick={() => navigate(t.id)}>{t.label}</button>))}</nav><main className="main-content">{renderTab()}</main></div>)
+  return (<div className="app-root"><header className="app-header"><h1>Project Management Tool</h1><span className="badge-mode mode-dev">DEV</span><span className="badge badge-blue" style={{ marginLeft: 8, fontSize: '0.7rem', padding: '2px 8px' }}>{roleName}</span><button className="btn-sm btn-reset" onClick={handleReset} style={{ marginLeft: 'auto' }}>🔄 Reset</button></header><div style={{ padding: '8px 28px', background: 'var(--border-light)', borderBottom: '1px solid var(--border)', display: 'flex', gap: 8, alignItems: 'center', fontSize: '0.8rem' }}><span style={{ color: 'var(--text-muted)' }}>Role:</span><select value={roleName} onChange={e => setRole(e.target.value)} style={{ padding: '4px 8px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)', fontSize: '0.8rem' }}>{ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}</select></div><nav className="tab-nav">{visibleTabs.map(t => (<button key={t.id} className={`tab-btn ${tab === t.id ? 'active' : ''}`} onClick={() => navigate(t.id)}>{t.label}</button>))}</nav><main className="main-content"><Suspense fallback={<div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>Loading...</div>}>{renderTab()}</Suspense></main></div>)
 }
 
 function AppWithProviders() { return (<RoleProvider><NavigationProvider><SearchProvider><UIProvider><App /></UIProvider></SearchProvider></NavigationProvider></RoleProvider>) }
 
 export default AppWithProviders
-export { App }

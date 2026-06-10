@@ -7,7 +7,7 @@ import {
   getModelName,
   genId,
   MODELS
-} from './App'
+} from './test-exports'
 
 beforeEach(() => {
   localStorage.clear()
