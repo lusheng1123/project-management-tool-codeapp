@@ -4,6 +4,8 @@ import { badgeClass } from '../context/UIContext'
 import { useNavigation } from '../context/NavigationContext'
 import { useRole } from '../context/RoleContext'
 import { StatsCards } from '../components/StatsCards'
+import { BarChart } from '../components/BarChart'
+import { ResourceCapacity } from '../components/ResourceCapacity'
 
 export function DashboardView() {
   const [key] = useState(0)
@@ -15,6 +17,7 @@ export function DashboardView() {
   const releases = useMemo(() => DS.getAll('pm_release'), [key])
   const releaseItems = useMemo(() => DS.getAll('pm_releaseitem'), [key])
   const products = useMemo(() => DS.getAll('pm_product'), [key])
+  const projects = useMemo(() => DS.getAll('pm_project'), [key])
   const vsConfigs = useMemo(() => DS.query('pm_config', { pm_type: 'value_stream' }), [key])
 
   const pendingDemands = demands.filter((d: any) => {
@@ -48,6 +51,20 @@ export function DashboardView() {
     riskCount: risks.filter((r: any) => r.pm_productname === p.id).length,
     depCount: deps.filter((d: any) => d.pm_productname === p.id).length
   })).filter((s: any) => s.demandCount + s.riskCount + s.depCount > 0)
+
+  // Chart data
+  const demandByStatus = useMemo(() => {
+    const counts: Record<string, number> = {}
+    demands.filter((d: any) => !(d.pm_status === 'Approved' && d.pm_converted_to) && !['Backlogged', 'Rejected'].includes(d.pm_status))
+      .forEach((d: any) => { counts[d.pm_status] = (counts[d.pm_status] || 0) + 1 })
+    return Object.entries(counts).map(([label, value]) => ({ label, value }))
+  }, [demands])
+
+  const projectsByStatus = useMemo(() => {
+    const counts: Record<string, number> = {}
+    projects.forEach((p: any) => { counts[p.pm_status] = (counts[p.pm_status] || 0) + 1 })
+    return Object.entries(counts).map(([label, value]) => ({ label, value }))
+  }, [projects])
 
   return (
     <div>
@@ -194,6 +211,25 @@ export function DashboardView() {
                 </tbody>
               </table>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* Charts + Capacity */}
+      <div style={{ display: 'flex', gap: '20px', marginTop: '20px', flexWrap: 'wrap' }}>
+        <div style={{ flex: '1 1 0', minWidth: '320px' }}>
+          <div className="card" style={{ padding: '18px' }}>
+            <BarChart title="📥 Demand Status" data={demandByStatus} />
+          </div>
+        </div>
+        <div style={{ flex: '1 1 0', minWidth: '320px' }}>
+          <div className="card" style={{ padding: '18px' }}>
+            <BarChart title="📁 Project Status" data={projectsByStatus} />
+          </div>
+        </div>
+        <div style={{ flex: '1 1 0', minWidth: '320px' }}>
+          <div className="card" style={{ padding: '18px' }}>
+            <ResourceCapacity />
           </div>
         </div>
       </div>
